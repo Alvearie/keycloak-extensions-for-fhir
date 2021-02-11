@@ -24,8 +24,8 @@ SPDX-License-Identifier: Apache-2.0
 ```
 
 ## Communication
-Connect with us at https://chat.fhir.org/#narrow/stream/179170-smart/topic/Keycloak.20for.20SMART.20authz
-or open an [issue](issues).
+Connect with us on [chat.fhir.org](https://chat.fhir.org/#narrow/stream/179170-smart/topic/Keycloak.20for.20SMART.20authz)
+or open an [issue](https://github.com/Alvearie/keycloak-extensions-for-fhir/issues).
 
 ## Setup
 **FIXME** Please add any special setup instructions for your project to help the developer
