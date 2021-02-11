@@ -34,7 +34,7 @@ Note: the TokenResponseMapper extension will be deprecated and removed from this
 ### Standalone app launch with context picker and an external Identity Provider
 In this pattern, Keycloak is used to broker users from one or more external OpenID Connect (OIDC) Identity Provider (IdP) and IdPs are required to pass the set of Patient resource ids (or something that can be mapped to the Patient resource ids) for which the user has access.
 
-The IdP passes the corresponding Patient resource id (or something that can be mapped to the Patient resource id) to Keycloak via a pre-coordinated field on the IdP-issued id token or its corresponding userinfo/introspection response.
+The IdP passes the Patient resource ids (or something that can be mapped to the Patient resource ids) to Keycloak via a pre-coordinated field on the IdP-issued id token or its corresponding userinfo/introspection response.
 
 If the client application has requested the `launch/patient` scope, Keycloak will present a Patient context picker and the end user must select which patient to use for the scope of the current session.
 
