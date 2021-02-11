@@ -22,7 +22,7 @@ This field is mapped to a user attribute via a Keycloak *Attribute Importer* and
 1. the issued access token via a Keycloak *User Attribute* mapper; and
 2. the token response via the *Token Response Mapper* Keycloak extension from this repository (requires Keycloak 12.x or above).
 
-Note: the TokenResponseMapper extension will be deprecated and removed from this repository once the built-in Keycloak *User Attribute* mapper has been updated to support this pattern. See https://github.com/keycloak/keycloak/pull/7773.
+Note: the TokenResponseMapper extension will be deprecated and removed from this repository once the built-in Keycloak *User Attribute* mapper has been updated to support this pattern.
 
 #### Bill of materials
 | Component | Description |
@@ -34,7 +34,7 @@ Note: the TokenResponseMapper extension will be deprecated and removed from this
 ### Standalone app launch with context picker and an external Identity Provider
 In this pattern, Keycloak is used to broker users from one or more external OpenID Connect (OIDC) Identity Provider (IdP) and IdPs are required to pass the set of Patient resource ids (or something that can be mapped to the Patient resource ids) for which the user has access.
 
-The IdP passes the Patient resource ids (or something that can be mapped to the Patient resource ids) to Keycloak via a pre-coordinated field on the IdP-issued id token or its corresponding userinfo/introspection response.
+The IdP passes the corresponding Patient resource id (or something that can be mapped to the Patient resource id) to Keycloak via a pre-coordinated field on the IdP-issued id token or its corresponding userinfo/introspection response.
 
 If the client application has requested the `launch/patient` scope, Keycloak will present a Patient context picker and the end user must select which patient to use for the scope of the current session.
 
@@ -47,16 +47,6 @@ TBD
 Are you using Keycloak for SMART on FHIR or other health APIs? If so, we'd love to hear from you.
 Connect with us at https://chat.fhir.org/#narrow/stream/179170-smart/topic/Keycloak.20for.20SMART.20authz
 or open an [issue][issues].
-
-All contributors must provide a [Developer's Certificate of Origin 1.1 (DCO)](https://github.com/hyperledger/fabric/blob/master/docs/source/DCO1.1.txt) sign-off for each commit, so please read the text of the DCO and add the following line to the end of each commit message:
-```
-Signed-off-by: Author Name <author.email@example.com>
-```
-
-Hint:  git will add this line automatically if you pass the `-s` (`--signoff`) flag to your git commit.
-
-The repository has been configured with the [DCO bot](https://github.com/probot/dco), which ensures that
-all contributions are "signed off" before they are be merged.
 
 ## License
 All source files must include a Copyright and License header. The SPDX license header is
