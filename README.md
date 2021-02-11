@@ -46,7 +46,7 @@ TBD
 ## Contributing
 Are you using Keycloak for SMART on FHIR or other health APIs? If so, we'd love to hear from you.
 Connect with us at https://chat.fhir.org/#narrow/stream/179170-smart/topic/Keycloak.20for.20SMART.20authz
-or open an [issue][issues].
+or open an [issue](issues).
 
 ## License
 All source files must include a Copyright and License header. The SPDX license header is
