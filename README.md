@@ -22,7 +22,7 @@ This field is mapped to a user attribute via a Keycloak *Attribute Importer* and
 1. the issued access token via a Keycloak *User Attribute* mapper; and
 2. the token response via the *Token Response Mapper* Keycloak extension from this repository (requires Keycloak 12.x or above).
 
-Note: the TokenResponseMapper extension will be deprecated and removed from this repository once the built-in Keycloak *User Attribute* mapper has been updated to support this pattern.
+Note: the TokenResponseMapper extension will be deprecated and removed from this repository once the built-in Keycloak *User Attribute* mapper has been updated to support this pattern. See https://github.com/keycloak/keycloak/pull/7773.
 
 #### Bill of materials
 | Component | Description |
