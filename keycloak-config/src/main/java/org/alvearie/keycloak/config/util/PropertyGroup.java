@@ -1,9 +1,8 @@
 /*
- * (C) Copyright IBM Corp. 2021
- *
- * SPDX-License-Identifier: Apache-2.0
- */
+(C) Copyright IBM Corp. 2021
 
+SPDX-License-Identifier: Apache-2.0
+*/
 package org.alvearie.keycloak.config.util;
 
 import java.util.ArrayList;

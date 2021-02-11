@@ -1,8 +1,8 @@
 /*
- * (C) Copyright IBM Corp. 2021
- *
- * SPDX-License-Identifier: Apache-2.0
- */
+(C) Copyright IBM Corp. 2021
+
+SPDX-License-Identifier: Apache-2.0
+*/
 package org.alvearie.keycloak;
 
 import org.keycloak.Config;
@@ -23,7 +23,7 @@ public class AudienceValidatorFactory implements AuthenticatorFactory {
 
     private static final String PROVIDER_ID = "audience-validator";
     static final String AUDIENCES = "Audiences";
-    
+
     @Override
     public String getDisplayType() {
         return "Audience Validation";
@@ -62,7 +62,7 @@ public class AudienceValidatorFactory implements AuthenticatorFactory {
 
     @Override
     public List<ProviderConfigProperty> getConfigProperties() {
-        return Collections.singletonList(new ProviderConfigProperty("Audiences", "Audiences", 
+        return Collections.singletonList(new ProviderConfigProperty("Audiences", "Audiences",
                 "Valid audiences for clients to request", ProviderConfigProperty.MULTIVALUED_STRING_TYPE, null));
     }
 
