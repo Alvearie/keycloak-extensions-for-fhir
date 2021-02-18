@@ -1,31 +1,36 @@
 ## Contributing
-This repository is provided as a sample and is not yet accepting contributions.
-In the near future, we hope to clear the necessary legalese to accept contributions so that this repository
-can fulfill its purpose as a community effort for Keycloak practitioners in health IT.
+Our project welcomes contributions. If you have an itch, please scratch it.
 
-### Merge approval
+### Communication
+Connect with us on [chat.fhir.org](https://chat.fhir.org/#narrow/stream/179170-smart/topic/Keycloak.20for.20SMART.20authz)
+or open an [issue](https://github.com/Alvearie/keycloak-extensions-for-fhir/issues).
 
-All changes to the `main` branch must be approved by one or more project maintainer.
-
-For a list of project maintainers, see the [MAINTAINERS.md](MAINTAINERS.md) page.
-We are always looking for additional maintainers, so please contact us if you are interest in helping to drive the project forward.
-
-## Legal
-
-Each source file must include a license header for the Apache
-Software License 2.0. Using the SPDX format is the simplest approach.
+### Legal
+Each source file should include a copyright statement and must include a link to the Apache
+Software License 2.0. Using the SPDX format is the simplest approach:
 
 ```
 /*
-(C) Copyright IBM Corp. 2021
+(C) Copyright <your name or company name here> 2021
 
 SPDX-License-Identifier: Apache-2.0
 */
 ```
 
-## Communication
-Connect with us on [chat.fhir.org](https://chat.fhir.org/#narrow/stream/179170-smart/topic/Keycloak.20for.20SMART.20authz)
-or open an [issue](https://github.com/Alvearie/keycloak-extensions-for-fhir/issues).
+Or, if modifying an existing file:
+```
+/*
+(C) Copyright <original copyright holder> and others 2021
+
+SPDX-License-Identifier: Apache-2.0
+*/
+```
+
+### Merge approval
+All changes to the `main` branch must be approved by one or more project maintainer.
+
+For a list of project maintainers, see the [MAINTAINERS.md](MAINTAINERS.md) page.
+We are always looking for additional maintainers, so please contact us if you are interest in helping to drive the project forward.
 
 ## Setup
 **FIXME** Please add any special setup instructions for your project to help the developer
