@@ -19,17 +19,19 @@ In this pattern, Keycloak is used to broker users from an external OpenID Connec
 The IdP passes the corresponding Patient resource id (or something that can be mapped to the Patient resource id) to Keycloak via a pre-coordinated field on the IdP-issued id token or its corresponding userinfo/introspection response.
 
 This field is mapped to a user attribute via a Keycloak *Attribute Importer* and then to
-1. the issued access token via a Keycloak *User Attribute* mapper; and
-2. the token response via the *Token Response Mapper* Keycloak extension from this repository (requires Keycloak 12.x or above).
+1. a configurable claim in the issued access token via a Keycloak *User Attribute* mapper; and
+2. a relative URL in the fhirUser claim of the issued id token (and userinfo response) via the *Patient Prefix User Attribute* mapper from this repository; and
+3. a `patient` field in the token endpoint's response body via the *User Attribute (with token response support)* mapper from this repository (requires Keycloak 12.x or above).
 
-Note: the TokenResponseMapper extension will be deprecated and removed from this repository once the built-in Keycloak *User Attribute* mapper has been [updated to support this pattern](https://github.com/keycloak/keycloak/pull/7773).
+Note: the *User Attribute (with token response support)* mapper in this repository will be deprecated and removed once the built-in Keycloak *User Attribute* mapper has been [updated to support this pattern](https://github.com/keycloak/keycloak/pull/7773).
 
 #### Bill of materials
 | Component | Description |
 |-----------|-------------|
 | keycloak-config | A Keycloak client for configuring realms via a JSON property file. |
 | keycloak-extensions/AudienceValidator | A Keycloak Authenticator for validating the `aud` parameter passed as part of the SMART App Launch request to the authorization endpoint (see [SMART best practices](http://docs.smarthealthit.org/authorization/best-practices/#25-access-token-phishing-by-counterfeit-resource-servers) for more information). |
-| keycloak-extensions/PatientprefixUserAttributeMapper | A Keycloak OIDCProtocolMapper for adding the `Patient/` prefix to a user attribute; used to map the Patient resource id attribute into a valid `fhirUser` claim on the id_token when the `fhirUser` scope is requested. |
+| keycloak-extensions/PatientPrefixUserAttributeMapper | A Keycloak OIDCProtocolMapper for adding the `Patient/` prefix to a user attribute; used to map the Patient resource id attribute into a valid `fhirUser` claim on the id_token when the `fhirUser` scope is requested. |
+| keycloak-extensions/UserAttributeMapper | A forked copy of the Keycloak User Attribute mapper that ha been extended to support mapping user attributes to custom fields in the token response payload (rather than claims in the issued tokens). |
 
 ### Standalone app launch with context picker and an external Identity Provider
 In this pattern, Keycloak is used to broker users from one or more external OpenID Connect (OIDC) Identity Provider (IdP) and IdPs are required to pass the set of Patient resource ids (or something that can be mapped to the Patient resource ids) for which the user has access.
