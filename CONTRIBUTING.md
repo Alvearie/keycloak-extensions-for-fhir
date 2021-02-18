@@ -3,7 +3,7 @@ Our project welcomes contributions. If you have an itch, please scratch it.
 
 ### Communication
 Connect with us on [chat.fhir.org](https://chat.fhir.org/#narrow/stream/179170-smart/topic/Keycloak.20for.20SMART.20authz)
-or open an [issue](https://github.com/Alvearie/keycloak-extensions-for-fhir/issues).
+or open an [issue](https://github.com/Alvearie/keycloak-extensions-for-fhir/issues) or pull request.
 
 ### Legal
 Each source file should include a copyright statement and must include a link to the Apache

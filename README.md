@@ -47,6 +47,6 @@ TBD
 Are you using Keycloak for SMART on FHIR or other health APIs? If so, we'd love to hear from you.
 
 Connect with us on [chat.fhir.org](https://chat.fhir.org/#narrow/stream/179170-smart/topic/Keycloak.20for.20SMART.20authz)
-or open an [issue](https://github.com/Alvearie/keycloak-extensions-for-fhir/issues).
+or open an [issue](https://github.com/Alvearie/keycloak-extensions-for-fhir/issues) or pull request.
 
 See [CONTRIBUTING.md](./CONTRIBUTING.md) for more information and [CODE_OF_CONDUCT.md](./CODE_OF_CONDUCT.md) for our code of conduct.
