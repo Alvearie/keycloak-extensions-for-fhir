@@ -12,14 +12,12 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-import org.apache.commons.cli.CommandLine;
-import org.apache.commons.cli.DefaultParser;
-import org.apache.commons.cli.HelpFormatter;
-import org.apache.commons.cli.Option;
-import org.apache.commons.cli.Options;
-import org.apache.commons.cli.ParseException;
+import javax.ws.rs.core.Response;
+
+import org.alvearie.keycloak.config.util.KeycloakConfig;
+import org.alvearie.keycloak.config.util.PropertyGroup;
+import org.alvearie.keycloak.config.util.PropertyGroup.PropertyEntry;
 import org.keycloak.admin.client.Keycloak;
-import org.keycloak.admin.client.KeycloakBuilder;
 import org.keycloak.admin.client.resource.AuthenticationManagementResource;
 import org.keycloak.admin.client.resource.ClientScopesResource;
 import org.keycloak.admin.client.resource.ClientsResource;
@@ -42,100 +40,11 @@ import org.keycloak.representations.idm.ProtocolMapperRepresentation;
 import org.keycloak.representations.idm.RealmRepresentation;
 import org.keycloak.representations.idm.UserRepresentation;
 
-import org.alvearie.keycloak.config.util.KeycloakConfig;
-import org.alvearie.keycloak.config.util.PropertyGroup;
-import org.alvearie.keycloak.config.util.PropertyGroup.PropertyEntry;
+public class KeycloakConfigurator {
+    private final Keycloak adminClient;
 
-/**
- * Initializes the Keycloak configuration.
- *
- * Command line arguments:
- *   configFile: the file path to a JSON file containing Keycloak configuration properties
- */
-public class InitializeKeycloakConfig {
-
-    private static final String CONFIG_FILE_PATH_OPTION = "configFile";
-    private static final String CLASS_NAME = "InitializeKeycloakConfig";
-    private static final String MASTER_REALM = "master";
-
-    /**
-     * Initializes the Keycloak configuration.
-     * @param args the passed in arguments
-     * @throws Exception
-     */
-    public static void main(String[] args) throws Exception {
-        Options options = null;
-        CommandLine cmd;
-        String configFilePath;
-
-        try {
-            // Process the options
-            options = buildCmdOptions();
-            cmd = new DefaultParser().parse(options, args);
-            configFilePath = cmd.getOptionValue(CONFIG_FILE_PATH_OPTION);
-        } catch (ParseException e) {
-            String header = "Initialize keycloak config\n\n";
-            String footer = "\n";
-            HelpFormatter formatter = new HelpFormatter();
-            formatter.printHelp(CLASS_NAME, header, options, footer, true);
-            throw new RuntimeException("Invalid arguments", e);
-        }
-
-        // Perform the action
-        KeycloakConfig config = new KeycloakConfig(configFilePath);
-        initializeKeycloakConfig(config);
-    }
-
-    /**
-     * Builds the command options.
-     * @return the command options
-     */
-    private static Options buildCmdOptions() {
-        Options options = new Options();
-
-        Option configFilePathOption = new Option(CONFIG_FILE_PATH_OPTION, true, "The file path to a JSON file containing Keycloak configuration properties");
-        configFilePathOption.setRequired(true);
-        options.addOption(configFilePathOption);
-
-        return options;
-    }
-
-    /**
-     * Initializes the Keycloak configuration.
-     * @param config the Keycloak configuration to initialize
-     * @throws Exception an exception
-     */
-    private static void initializeKeycloakConfig(KeycloakConfig config) throws Exception {
-
-        // Create Keycloak client
-        Keycloak client = createKeycloakClient(config);
-
-        // Initialize realms
-        PropertyGroup realmsPg = config.getPropertyGroup(KeycloakConfig.PROP_KEYCLOAK_REALMS);
-        if (realmsPg != null) {
-            RealmsResource realms = client.realms();
-            for (PropertyEntry realmPe: realmsPg.getProperties()) {
-                String realmName = realmPe.getName();
-                PropertyGroup realmPg = realmsPg.getPropertyGroup(realmName);
-                initializeRealm(realms, realmName, realmPg);
-            }
-        }
-    }
-
-    /**
-     * Creates a Keycloak client.
-     * @param config the Keycloak configuration to initialize
-     * @return a Keycloak client
-     */
-    private static Keycloak createKeycloakClient(KeycloakConfig config) {
-        Keycloak keycloak = KeycloakBuilder.builder()
-                .serverUrl(config.getStringProperty(KeycloakConfig.PROP_KEYCLOAK_SERVER_URL))
-                .realm(MASTER_REALM)
-                .username(config.getStringProperty(KeycloakConfig.PROP_KEYCLOAK_ADMIN_USER))
-                .password(config.getStringProperty(KeycloakConfig.PROP_KEYCLOAK_ADMIN_PW))
-                .clientId(config.getStringProperty(KeycloakConfig.PROP_KEYCLOAK_ADMIN_CLIENT_ID))
-                .build();
-        return keycloak;
+    public KeycloakConfigurator(Keycloak client) {
+        this.adminClient = client;
     }
 
     /**
@@ -145,9 +54,10 @@ public class InitializeKeycloakConfig {
      * @param realmPg the realm property group
      * @throws Exception an Exception
      */
-    private static void initializeRealm(RealmsResource realms, String realmName, PropertyGroup realmPg) throws Exception {
+    public void initializeRealm(String realmName, PropertyGroup realmPg) throws Exception {
         System.out.println("initializing realm: " + realmName);
         // Create realm if it does not exist
+        RealmsResource realms = adminClient.realms();
         RealmRepresentation realm = getRealmByName(realms, realmName);
         if (realm == null) {
             realm = new RealmRepresentation();
@@ -294,7 +204,7 @@ public class InitializeKeycloakConfig {
      * @param realm
      * @param eventsPg
      */
-    private static void initializeEventsConfig(RealmRepresentation realm, PropertyGroup eventsPg) {
+    void initializeEventsConfig(RealmRepresentation realm, PropertyGroup eventsPg) {
         System.out.println("initializing events config");
 
         // Login events
@@ -333,7 +243,7 @@ public class InitializeKeycloakConfig {
      * @param clientScopePg the client scope property group
      * @throws Exception an Exception
      */
-    private static void initializeClientScope(ClientScopesResource clientScopes, String clientScopeName, PropertyGroup clientScopePg) throws Exception {
+    void initializeClientScope(ClientScopesResource clientScopes, String clientScopeName, PropertyGroup clientScopePg) throws Exception {
         System.out.println("initializing client scope: " + clientScopeName);
         // Create client scope if it does not exist
         ClientScopeRepresentation clientScope = getClientScopeByName(clientScopes, clientScopeName);
@@ -382,7 +292,7 @@ public class InitializeKeycloakConfig {
      * @param mapperPg the protocol mapper property group
      * @throws Exception an Exception
      */
-    private static void initializeProtocolMapper(ProtocolMappersResource protocolMappers, String mapperName, PropertyGroup mapperPg) throws Exception {
+    void initializeProtocolMapper(ProtocolMappersResource protocolMappers, String mapperName, PropertyGroup mapperPg) throws Exception {
         System.out.println("initializing protocol mapper: " + mapperName);
         // Create protocol mapper if it does not exist
         ProtocolMapperRepresentation protocolMapper = getProtocolMapperByName(protocolMappers, mapperName);
@@ -391,10 +301,10 @@ public class InitializeKeycloakConfig {
             protocolMapper.setName(mapperName);
             protocolMapper.setProtocol(mapperPg.getStringProperty(KeycloakConfig.PROP_CLIENT_SCOPE_MAPPER_PROTOCOL));
             protocolMapper.setProtocolMapper(mapperPg.getStringProperty(KeycloakConfig.PROP_CLIENT_SCOPE_MAPPER_PROTOCOL_MAPPER));
-            protocolMappers.createMapper(protocolMapper);
+            Response response = protocolMappers.createMapper(protocolMapper);
             protocolMapper = getProtocolMapperByName(protocolMappers, mapperName);
             if (protocolMapper == null) {
-                throw new RuntimeException("Unable to create protocol mapper");
+                throw new RuntimeException("Unable to create protocol mapper: " + response.readEntity(String.class));
             }
         }
 
@@ -424,7 +334,7 @@ public class InitializeKeycloakConfig {
      * @param clientPg the client property group
      * @throws Exception an Exception
      */
-    private static void initializeClient(ClientsResource clients, ClientScopesResource clientScopes, String clientId, PropertyGroup clientPg) throws Exception {
+    void initializeClient(ClientsResource clients, ClientScopesResource clientScopes, String clientId, PropertyGroup clientPg) throws Exception {
         System.out.println("initializing client: " + clientId);
         // Create client if it does not exist
         ClientRepresentation client = getClientByClientId(clients, clientId);
@@ -499,7 +409,7 @@ public class InitializeKeycloakConfig {
      * @param identityProviderPg the identity provider property group
      * @throws Exception an Exception
      */
-    private static void initializeIdentityProvider(IdentityProvidersResource identityProviders, String identityProviderAlias, PropertyGroup identityProviderPg) throws Exception {
+    void initializeIdentityProvider(IdentityProvidersResource identityProviders, String identityProviderAlias, PropertyGroup identityProviderPg) throws Exception {
         System.out.println("initializing identity provider: " + identityProviderAlias);
         // Create identity provider if it does not exist
         IdentityProviderRepresentation identityProvider = getIdentityProviderByAlias(identityProviders, identityProviderAlias);
@@ -566,7 +476,7 @@ public class InitializeKeycloakConfig {
      * @param mapperPg the identity provider mapper property group
      * @throws Exception an Exception
      */
-    private static void initializeIdentityProviderMapper(IdentityProviderResource identityProvider, String identityProviderAlias, String mapperName, PropertyGroup mapperPg) throws Exception {
+    void initializeIdentityProviderMapper(IdentityProviderResource identityProvider, String identityProviderAlias, String mapperName, PropertyGroup mapperPg) throws Exception {
         System.out.println("initializing identity provider mapper: " + mapperName);
         // Create protocol mapper if it does not exist
         IdentityProviderMapperRepresentation identityProviderMapper = getIdentityProvideMapperByName(identityProvider, mapperName);
@@ -619,7 +529,7 @@ public class InitializeKeycloakConfig {
      * @param authenticationFlowPg the authentication flow property group
      * @throws Exception an Exception
      */
-    private static void initializeAuthenticationFlow(AuthenticationManagementResource authMgmt, String authenticationFlowAlias, PropertyGroup authenticationFlowPg) throws Exception {
+    void initializeAuthenticationFlow(AuthenticationManagementResource authMgmt, String authenticationFlowAlias, PropertyGroup authenticationFlowPg) throws Exception {
         System.out.println("initializing authentication flow: " + authenticationFlowAlias);
         // Get authentication flow
         AuthenticationFlowRepresentation authenticationFlow = getAuthenticationFlowByAlias(authMgmt, authenticationFlowAlias);
@@ -646,7 +556,7 @@ public class InitializeKeycloakConfig {
      * @param identityProviderRedirectorPg the identity provider redirector property group
      * @throws Exception an Exception
      */
-    private static void initializeIdentityProviderRedirector(AuthenticationManagementResource authMgmt, String authenticationFlowAlias, String identityProviderRedirectorAlias, PropertyGroup identityProviderRedirectorPg) throws Exception {
+    void initializeIdentityProviderRedirector(AuthenticationManagementResource authMgmt, String authenticationFlowAlias, String identityProviderRedirectorAlias, PropertyGroup identityProviderRedirectorPg) throws Exception {
         System.out.println("initializing identity provider redirector: " + identityProviderRedirectorAlias);
         // Get identity provider redirector
         AuthenticationExecutionInfoRepresentation identityProviderRedirector = getIdentityProviderRedirector(authMgmt, authenticationFlowAlias);
@@ -714,7 +624,7 @@ public class InitializeKeycloakConfig {
      * @param groupPg the group property group
      * @throws Exception an Exception
      */
-    private static void initializeGroup(GroupsResource groups, String groupName, PropertyGroup groupPg) throws Exception {
+    void initializeGroup(GroupsResource groups, String groupName, PropertyGroup groupPg) throws Exception {
         System.out.println("initializing group: " + groupName);
         // Create group if it does not exist
         GroupRepresentation group = getGroupByName(groups, groupName);
@@ -753,7 +663,7 @@ public class InitializeKeycloakConfig {
      * @param userPg the user property group
      * @throws Exception an Exception
      */
-    private static void initializeUser(UsersResource users, GroupsResource groups, String userName, PropertyGroup userPg) throws Exception {
+    void initializeUser(UsersResource users, GroupsResource groups, String userName, PropertyGroup userPg) throws Exception {
         System.out.println("initializing user: " + userName);
         // Create user if it does not exist
         UserRepresentation user = getUserByName(users, userName);
@@ -813,7 +723,7 @@ public class InitializeKeycloakConfig {
      * @param realmName the realm name
      * @return the realm, or null if not found
      */
-    private static RealmRepresentation getRealmByName(RealmsResource realmsResource, String realmName) {
+    private RealmRepresentation getRealmByName(RealmsResource realmsResource, String realmName) {
         for (RealmRepresentation realm : realmsResource.findAll()) {
             if (realmName.equals(realm.getRealm())) {
                 return realm;
@@ -828,7 +738,7 @@ public class InitializeKeycloakConfig {
      * @param clientScopeName the client scope name
      * @return the client scope, or null if not found
      */
-    private static ClientScopeRepresentation getClientScopeByName(ClientScopesResource clientScopes, String clientScopeName) {
+    private ClientScopeRepresentation getClientScopeByName(ClientScopesResource clientScopes, String clientScopeName) {
         for (ClientScopeRepresentation clientScope : clientScopes.findAll()) {
             if (clientScopeName.equals(clientScope.getName())) {
                 return clientScope;
@@ -843,7 +753,7 @@ public class InitializeKeycloakConfig {
      * @param clientScopeNames the client scope names
      * @return the client scope IDs
      */
-    private static List<String> getClientScopeIds(ClientScopesResource clientScopes, List<String> clientScopeNames) {
+    private List<String> getClientScopeIds(ClientScopesResource clientScopes, List<String> clientScopeNames) {
         List<String> clientScopeIds = new ArrayList<>();
         Map<String, String> nameToIdMap = clientScopes.findAll().stream().collect(Collectors.toMap(c -> c.getName(), c -> c.getId()));
 
@@ -859,11 +769,11 @@ public class InitializeKeycloakConfig {
 
     /**
      * Gets the client by client ID.
-     * @param client the clients
+     * @param adminClient the clients
      * @param clientName the client name
      * @return the client, or null if not found
      */
-    private static ClientRepresentation getClientByClientId(ClientsResource clients, String clientId) {
+    private ClientRepresentation getClientByClientId(ClientsResource clients, String clientId) {
         for (ClientRepresentation client : clients.findAll()) {
             if (clientId.equals(client.getClientId())) {
                 return client;
@@ -878,7 +788,7 @@ public class InitializeKeycloakConfig {
      * @param mapperName the mapper name
      * @return the protocol mapper, or null if not found
      */
-    private static ProtocolMapperRepresentation getProtocolMapperByName(ProtocolMappersResource protocolMappers, String mapperName) {
+    private ProtocolMapperRepresentation getProtocolMapperByName(ProtocolMappersResource protocolMappers, String mapperName) {
         for (ProtocolMapperRepresentation protocolMapper : protocolMappers.getMappers()) {
             if (mapperName.equals(protocolMapper.getName())) {
                 return protocolMapper;
@@ -893,7 +803,7 @@ public class InitializeKeycloakConfig {
      * @param identityProviderAlias the identity provider alias
      * @return the identity provider, or null if not found
      */
-    private static IdentityProviderRepresentation getIdentityProviderByAlias(IdentityProvidersResource identityProviders, String identityProviderAlias) {
+    private IdentityProviderRepresentation getIdentityProviderByAlias(IdentityProvidersResource identityProviders, String identityProviderAlias) {
         for (IdentityProviderRepresentation identityProvider : identityProviders.findAll()) {
             if (identityProviderAlias.equals(identityProvider.getAlias())) {
                 return identityProvider;
@@ -908,7 +818,7 @@ public class InitializeKeycloakConfig {
      * @param mapperName the mapper name
      * @return the identity provider mapper, or null if not found
      */
-    private static IdentityProviderMapperRepresentation getIdentityProvideMapperByName(IdentityProviderResource identityProvider, String mapperName) {
+    private IdentityProviderMapperRepresentation getIdentityProvideMapperByName(IdentityProviderResource identityProvider, String mapperName) {
         for (IdentityProviderMapperRepresentation identityProviderMapper : identityProvider.getMappers()) {
             if (mapperName.equals(identityProviderMapper.getName())) {
                 return identityProviderMapper;
@@ -924,7 +834,7 @@ public class InitializeKeycloakConfig {
      * @param authenticationFlowAlias the authentication flow alias
      * @return the authorization flow, or null if not found
      */
-    private static AuthenticationFlowRepresentation getAuthenticationFlowByAlias(AuthenticationManagementResource authMgmt, String authenticationFlowAlias) {
+    private AuthenticationFlowRepresentation getAuthenticationFlowByAlias(AuthenticationManagementResource authMgmt, String authenticationFlowAlias) {
         for (AuthenticationFlowRepresentation flow : authMgmt.getFlows()) {
             if (authenticationFlowAlias.equals(flow.getAlias())) {
                 return flow;
@@ -939,7 +849,7 @@ public class InitializeKeycloakConfig {
      * @param authenticationFlowAlias the authentication flow alias
      * @return the authorization flow, or null if not found
      */
-    private static AuthenticationExecutionInfoRepresentation getIdentityProviderRedirector(AuthenticationManagementResource authMgmt, String authenticationFlowAlias) {
+    private AuthenticationExecutionInfoRepresentation getIdentityProviderRedirector(AuthenticationManagementResource authMgmt, String authenticationFlowAlias) {
         for (AuthenticationExecutionInfoRepresentation execution : authMgmt.getExecutions(authenticationFlowAlias)) {
             if (KeycloakConfig.KEYCLOAK_IDENTITY_PROVIDER_REDIRECTOR.equals(execution.getProviderId())) {
                 return execution;
@@ -955,7 +865,7 @@ public class InitializeKeycloakConfig {
      * @param groupName the group name
      * @return the group, or null if not found
      */
-    private static GroupRepresentation getGroupByName(GroupsResource groups, String groupName) {
+    private GroupRepresentation getGroupByName(GroupsResource groups, String groupName) {
         for (GroupRepresentation group : groups.groups()) {
             if (groupName.equals(group.getName())) {
                 return group;
@@ -970,7 +880,7 @@ public class InitializeKeycloakConfig {
      * @param groupNames the group names
      * @return the group IDs
      */
-    private static List<String> getGroupIds(GroupsResource groups, List<String> groupNames) {
+    private List<String> getGroupIds(GroupsResource groups, List<String> groupNames) {
         List<String> groupIds = new ArrayList<>();
         for (GroupRepresentation group : groups.groups()) {
             if (groupNames != null && groupNames.contains(group.getName())) {
@@ -986,7 +896,7 @@ public class InitializeKeycloakConfig {
      * @param userName the user name
      * @return the user, or null if not found
      */
-    private static UserRepresentation getUserByName(UsersResource users, String userName) {
+    private UserRepresentation getUserByName(UsersResource users, String userName) {
         for (UserRepresentation user : users.list()) {
             if (userName.equals(user.getUsername())) {
                 return user;
