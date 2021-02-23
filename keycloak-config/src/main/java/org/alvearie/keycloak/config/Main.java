@@ -27,7 +27,7 @@ import org.keycloak.admin.client.resource.RealmsResource;
 public class Main {
 
     private static final String CONFIG_FILE_PATH_OPTION = "configFile";
-    private static final String CLASS_NAME = "InitializeKeycloakConfig";
+    private static final String CLASS_NAME = "Main";
     private static final String MASTER_REALM = "master";
 
     /**
