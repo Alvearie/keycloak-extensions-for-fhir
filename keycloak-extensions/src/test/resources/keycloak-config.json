@@ -1,0 +1,80 @@
+{
+	"test": {
+		"enabled": true,
+		"clientScopes": {
+			"fhirUser": {
+				"protocol": "openid-connect",
+				"description": "Permission to retrieve current logged-in user",
+				"attributes": {
+					"consent.screen.text": "Permission to retrieve current logged-in user"
+				},
+				"mappers": {
+					"fhirUser Mapper": {
+						"protocol": "openid-connect",
+						"protocolmapper": "oidc-patient-prefix-usermodel-attribute-mapper",
+						"config": {
+							"user.attribute": "resourceId",
+							"claim.name": "fhirUser",
+							"jsonType.label": "String",
+							"id.token.claim": "true",
+							"access.token.claim": "false",
+							"userinfo.token.claim": "true"
+						}
+					}
+				}
+			},
+			"profile": {
+				"protocol": "openid-connect",
+				"mappers": {
+					"Patient ID Claim Mapper": {
+						"protocol": "openid-connect",
+						"protocolmapper": "oidc-usermodel-attribute-mapper",
+						"config": {
+							"user.attribute": "resourceId",
+							"jsonType.label": "String",
+							"claim.name": "patient_id",
+							"id.token.claim": "false",
+							"access.token.claim": "true",
+							"userinfo.token.claim": "false"
+						}
+					},
+					"Patient ID Token Mapper": {
+						"protocol": "openid-connect",
+						"protocolmapper": "oidc-usermodel-attribute-mapper",
+						"config": {
+							"user.attribute": "resourceId",
+							"jsonType.label": "String",
+							"claim.name": "patient_id",
+							"id.token.claim": "false",
+							"access.token.claim": "true",
+							"userinfo.token.claim": "false"
+						}
+					}
+				}
+			}
+		},
+		"defaultDefaultClientScopes": ["profile"],
+		"defaultOptionalClientScopes": [
+			"fhirUser"
+		],
+		"clients": {
+			"test": {
+				"consentRequired": false,
+				"publicClient": true,
+				"bearerOnly": false,
+				"rootURL": "http://localhost",
+				"redirectURIs": ["http://localhost/*"]
+			}
+		},
+		"users": {
+			"a": {
+				"enabled": true,
+				"password": "a",
+				"passwordTemporary": false,
+				"attributes": {
+					"resourceId": ["Patient0000"]
+				}
+			}
+		}
+	}
+}
