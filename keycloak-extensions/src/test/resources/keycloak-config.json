@@ -23,8 +23,12 @@
 					}
 				}
 			},
-			"profile": {
+			"launch/patient": {
 				"protocol": "openid-connect",
+				"description": "Used by clients to request a patient-scoped access token",
+				"attributes": {
+					"display.on.consent.screen": "false"
+				},
 				"mappers": {
 					"Patient ID Claim Mapper": {
 						"protocol": "openid-connect",
@@ -40,14 +44,15 @@
 					},
 					"Patient ID Token Mapper": {
 						"protocol": "openid-connect",
-						"protocolmapper": "oidc-usermodel-attribute-mapper",
+						"protocolmapper": "oidc-usermodel-attribute-mapper-with-token-response-support",
 						"config": {
 							"user.attribute": "resourceId",
 							"jsonType.label": "String",
-							"claim.name": "patient_id",
+							"claim.name": "patient",
 							"id.token.claim": "false",
-							"access.token.claim": "true",
-							"userinfo.token.claim": "false"
+							"access.token.claim": "false",
+							"userinfo.token.claim": "false",
+							"access.tokenResponse.claim": "true"
 						}
 					}
 				}
