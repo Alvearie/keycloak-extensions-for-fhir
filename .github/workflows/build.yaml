@@ -1,0 +1,17 @@
+name: Java CI
+
+on: [push]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v2
+      - name: Setup Java
+        uses: actions/setup-java@v2-preview
+        with:
+          distribution: 'adopt'
+          java-version: '11'
+      - name: Build with Maven
+        run: mvn --batch-mode --update-snapshots verify

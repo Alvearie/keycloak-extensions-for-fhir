@@ -49,7 +49,6 @@ public class KeycloakConfigurator {
 
     /**
      * Initializes the realm.
-     * @param realms the realms resource
      * @param realmName the realm name
      * @param realmPg the realm property group
      * @throws Exception an Exception

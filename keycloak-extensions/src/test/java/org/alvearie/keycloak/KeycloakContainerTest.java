@@ -52,11 +52,11 @@ public class KeycloakContainerTest {
 
     @AfterClass
     public static void end() {
-        try {
-            Thread.sleep(10 * 60 * 1000); // 10 minutes
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
+//        try {
+//            Thread.sleep(10 * 60 * 1000); // 10 minutes
+//        } catch (InterruptedException e) {
+//            e.printStackTrace();
+//        }
         keycloak.close();
     }
 
