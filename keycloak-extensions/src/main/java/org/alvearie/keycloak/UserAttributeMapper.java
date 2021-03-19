@@ -49,7 +49,6 @@ import org.keycloak.representations.IDToken;
 public class UserAttributeMapper extends AbstractOIDCProtocolMapper implements OIDCAccessTokenMapper, OIDCIDTokenMapper, UserInfoTokenMapper, OIDCAccessTokenResponseMapper {
 
     private static final List<ProviderConfigProperty> configProperties = new ArrayList<ProviderConfigProperty>();
-
     static {
         ProviderConfigProperty property;
         property = new ProviderConfigProperty();
@@ -75,7 +74,7 @@ public class UserAttributeMapper extends AbstractOIDCProtocolMapper implements O
         configProperties.add(property);
     }
 
-    public static final String PROVIDER_ID = "oidc-usermodel-attribute-mapper2";
+    public static final String PROVIDER_ID = "oidc-usermodel-attribute-mapper-with-token-response-support";
 
 
     @Override

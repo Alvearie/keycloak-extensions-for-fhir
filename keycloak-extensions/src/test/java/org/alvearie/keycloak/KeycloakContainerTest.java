@@ -6,7 +6,11 @@ SPDX-License-Identifier: Apache-2.0
 package org.alvearie.keycloak;
 
 import static org.hamcrest.Matchers.notNullValue;
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThat;
+
+import java.net.HttpURLConnection;
+import java.net.URL;
 
 import org.alvearie.keycloak.config.KeycloakConfigurator;
 import org.alvearie.keycloak.config.util.KeycloakConfig;
@@ -30,7 +34,7 @@ public class KeycloakContainerTest {
     @BeforeClass
     public static void start() throws Exception {
         keycloak = new KeycloakContainer().withExtensionClassesFrom("target/classes");
-        // Shouldn't be needed, but is: https://github.com/dasniko/testcontainers-keycloak/issues/15
+        // Shouldn't be needed, but sometimes is: https://github.com/dasniko/testcontainers-keycloak/issues/15
         keycloak.withEnv("DB_VENDOR", "H2");
         keycloak.start();
 
@@ -48,6 +52,11 @@ public class KeycloakContainerTest {
 
     @AfterClass
     public static void end() {
+        try {
+            Thread.sleep(10 * 60 * 1000); // 10 minutes
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
         keycloak.close();
     }
 
@@ -55,5 +64,14 @@ public class KeycloakContainerTest {
     public void shouldReturnServerInfo() {
         ServerInfoRepresentation serverInfo = adminClient.serverInfo().getInfo();
         assertThat(serverInfo, notNullValue());
+    }
+
+    @Test
+    public void getHomePage() throws Exception {
+        Integer port = keycloak.getMappedPort(8080);
+        URL url = new URL("http://localhost:" + port + "/auth");
+        HttpURLConnection connection = (HttpURLConnection) url.openConnection();
+        connection.setRequestMethod("GET");
+        assertEquals(connection.getResponseCode(), 200);
     }
 }
