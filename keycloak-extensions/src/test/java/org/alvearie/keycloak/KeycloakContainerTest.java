@@ -28,16 +28,18 @@ public class KeycloakContainerTest {
     private static final String CLIENT_ID = "admin-cli";
 
     private static KeycloakContainer keycloak;
-    private static Keycloak adminClient;
-
-    @SuppressWarnings("resource")
-    @BeforeClass
-    public static void start() throws Exception {
+    static {
         keycloak = new KeycloakContainer().withExtensionClassesFrom("target/classes");
         // Shouldn't be needed, but sometimes is: https://github.com/dasniko/testcontainers-keycloak/issues/15
         keycloak.withEnv("DB_VENDOR", "H2");
+        keycloak.withReuse(true);
         keycloak.start();
+    }
 
+    private static Keycloak adminClient;
+
+    @BeforeClass
+    public static void start() throws Exception {
         adminClient = KeycloakBuilder.builder()
                 .serverUrl(keycloak.getAuthServerUrl())
                 .realm(MASTER_REALM)
@@ -52,12 +54,7 @@ public class KeycloakContainerTest {
 
     @AfterClass
     public static void end() {
-//        try {
-//            Thread.sleep(10 * 60 * 1000); // 10 minutes
-//        } catch (InterruptedException e) {
-//            e.printStackTrace();
-//        }
-        keycloak.close();
+        // no cleanup to enable re-use of the container
     }
 
     @Test
