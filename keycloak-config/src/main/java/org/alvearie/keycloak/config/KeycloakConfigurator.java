@@ -352,6 +352,7 @@ public class KeycloakConfigurator {
         client.setDescription(clientPg.getStringProperty(KeycloakConfig.PROP_CLIENT_DESCRIPTION));
         client.setConsentRequired(clientPg.getBooleanProperty(KeycloakConfig.PROP_CLIENT_CONSENT_REQUIRED));
         client.setPublicClient(clientPg.getBooleanProperty(KeycloakConfig.PROP_CLIENT_PUBLIC_CLIENT));
+        client.setDirectAccessGrantsEnabled(clientPg.getBooleanProperty(KeycloakConfig.PROP_CLIENT_DIRECT_ACCESS_ENABLED));
         client.setBearerOnly(clientPg.getBooleanProperty(KeycloakConfig.PROP_CLIENT_BEARER_ONLY));
         client.setRootUrl(clientPg.getStringProperty(KeycloakConfig.PROP_CLIENT_ROOT_URL));
         client.setRedirectUris(clientPg.getStringListProperty(KeycloakConfig.PROP_CLIENT_REDIRECT_URIS));

@@ -57,6 +57,7 @@ public class KeycloakConfig {
     public static final String PROP_CLIENT_CONSENT_REQUIRED = "consentRequired";
     public static final String PROP_CLIENT_PUBLIC_CLIENT = "publicClient";
     public static final String PROP_CLIENT_BEARER_ONLY = "bearerOnly";
+    public static final String PROP_CLIENT_DIRECT_ACCESS_ENABLED = "enableDirectAccess";
     public static final String PROP_CLIENT_DEFAULT_CLIENT_SCOPES = "defaultClientScopes";
     public static final String PROP_CLIENT_OPTIONAL_CLIENT_SCOPES = "optionalClientScopes";
     public static final String PROP_CLIENT_ROOT_URL = "rootURL";
@@ -88,6 +89,7 @@ public class KeycloakConfig {
     public static final String PROP_EVENTS_CONFIG_SAVE_ADMIN_EVENTS = "saveAdminEvents";
 
     private static final JsonReaderFactory JSON_READER_FACTORY = Json.createReaderFactory(null);
+
     private String fileName;
     private PropertyGroup config;
 

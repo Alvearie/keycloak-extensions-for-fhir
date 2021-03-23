@@ -507,6 +507,7 @@
 						"consentRequired": true,
 						"publicClient": true,
 						"bearerOnly": false,
+						"enableDirectAccess": false,
 						"rootURL": "http://localhost:4567/inferno",
 						"redirectURIs": ["http://localhost:4567/inferno/*",
 						"http://localhost:4567/inferno2/*"],

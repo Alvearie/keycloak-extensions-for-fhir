@@ -67,6 +67,7 @@
 				"consentRequired": false,
 				"publicClient": true,
 				"bearerOnly": false,
+				"enableDirectAccess": true,
 				"rootURL": "http://localhost",
 				"redirectURIs": ["http://localhost/*"]
 			}
