@@ -88,9 +88,10 @@ public class KeycloakContainerTest {
      * 
      * In rare cases, where declarative style testing do not work out, we can use this model for
      * test automation as well.
+     * @throws Exception 
      */
     @Test
-    public void passwordGrantLoginTest() {
+    public void passwordGrantLoginTest() throws Exception {
     	System.out.println("Host is: " + keycloak.getHost());
     	String tokenURL = "http://localhost:" + keycloak.getHttpPort() + TOKEN_ENDPOINT;
     	String jsonbody = "{\"grant_type\":\"password\",\"username\":\"" + USERNAME + "\",\"password\":\"" + PASSWORD + "\",\"client_id\":\""
@@ -99,16 +100,10 @@ public class KeycloakContainerTest {
         Map<String, Object> headers = new HashMap<String, Object>();
         headers.put("Content-Type", "application/x-www-form-urlencoded");
         Response r;
-        try {
             r = bh.execute(
             		tokenURL,
                     "POST", headers, null, jsonbody);
 
             System.out.println(r.getEntity().toString());
-
-        } catch (Exception e) {
-            e.printStackTrace();
-           
-        }
     }
 }
