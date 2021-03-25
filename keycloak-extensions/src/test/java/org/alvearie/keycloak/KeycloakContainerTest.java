@@ -82,6 +82,13 @@ public class KeycloakContainerTest {
         assertEquals(connection.getResponseCode(), 200);
     }
     
+    /**
+     * Example of running the same test that we exercised in KeycloakLoginTest class, zercode style
+     * Here we are relying on BasicHttpClient module that is part of the zerocode dependency
+     * 
+     * In rare cases, where declarative style testing do not work out, we can use this model for
+     * test automation as well.
+     */
     @Test
     public void passwordGrantLoginTest() {
     	System.out.println("Host is: " + keycloak.getHost());
@@ -91,7 +98,6 @@ public class KeycloakContainerTest {
     	BasicHttpClient bh = new BasicHttpClient();
         Map<String, Object> headers = new HashMap<String, Object>();
         headers.put("Content-Type", "application/x-www-form-urlencoded");
-        Map<String, String> tokenDetails = new HashMap<>();
         Response r;
         try {
             r = bh.execute(

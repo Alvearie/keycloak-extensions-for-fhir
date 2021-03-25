@@ -35,6 +35,31 @@
             }
         },
         {
+		// perform REST call to login to keycloak and fail to acquire token using invalid password grant-type
+            "name": "kc_get_bearer_token_negative_test",
+            "url": "http://${$.start_kc_container.response.host}:${$.start_kc_container.response.httpPort}/auth/realms/${keycloak.realm.name}/protocol/openid-connect/token",
+            "method": "POST",
+            "request": {
+            	"headers": {
+          			"Content-Type": "application/x-www-form-urlencoded"
+        		},
+              	"body": {
+              		"grant_type": "password",
+              		"username": "${keycloak.username}",
+              		"password": "invalidpassword",
+              		"client_id": "${keycloak.client.name}"
+                }
+           },
+            "verify": {
+                "status": 401,
+                "body": {
+    				"error" : "invalid_grant",
+    				"error_description" : "Invalid user credentials"
+
+                }
+            }
+        },
+        {
         // clean up by invoking the stop keycloak container step
         // Note: since this is made a reusable step as it can be  used in other testcases
 			"id": "reuse_stop_kc_container_step",

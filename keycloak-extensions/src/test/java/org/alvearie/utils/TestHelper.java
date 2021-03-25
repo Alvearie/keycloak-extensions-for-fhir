@@ -3,7 +3,7 @@
 (C) Copyright IBM Corp. 2021
 
 SPDX-License-Identifier: Apache-2.0
-*/
+ */
 
 package org.alvearie.utils;
 
@@ -58,28 +58,24 @@ public class TestHelper {
     static Map<String, Object> keycloakprops = new HashMap<String, Object>();
 
     @SuppressWarnings("resource")
-    public Map<String, Object> startKeycloakContainer(Map<String, String> parameters) {
+    public Map<String, Object> startKeycloakContainer(Map<String, String> parameters) throws Exception {
 
 	// Object to store/return properties needed for the down the line tests
+	// spin up and start the keycloak container
+	keycloak = new KeycloakContainer().withExtensionClassesFrom("target/classes");
+	// Shouldn't be needed, but is:
+	// https://github.com/dasniko/testcontainers-keycloak/issues/15
+	keycloak.withEnv(env_key, env_value);
+	keycloak.start();
+	adminClient = KeycloakBuilder.builder().serverUrl(keycloak.getAuthServerUrl()).realm(master_realm)
+		.username(keycloak.getAdminUsername()).password(keycloak.getAdminPassword()).clientId(client_id)
+		.build();
+	KeycloakConfigurator configurator = new KeycloakConfigurator(adminClient);
+	KeycloakConfig config = new KeycloakConfig("keycloak-config.json");
 
-	try {
-	    // spin up and start the keycloak container
-	    keycloak = new KeycloakContainer().withExtensionClassesFrom("target/classes");
-	    // Shouldn't be needed, but is:
-	    // https://github.com/dasniko/testcontainers-keycloak/issues/15
-	    keycloak.withEnv(env_key, env_value);
-	    keycloak.start();
-	    adminClient = KeycloakBuilder.builder().serverUrl(keycloak.getAuthServerUrl()).realm(master_realm)
-		    .username(keycloak.getAdminUsername()).password(keycloak.getAdminPassword()).clientId(client_id)
-		    .build();
-	    KeycloakConfigurator configurator = new KeycloakConfigurator(adminClient);
-	    KeycloakConfig config = new KeycloakConfig("keycloak-config.json");
-
-	    configurator.initializeRealm(realm_name, config.getPropertyGroup(realm_group));
-	    Thread.sleep(3000);
-	} catch (Exception e) {
-	    e.printStackTrace();
-	}
+	configurator.initializeRealm(realm_name, config.getPropertyGroup(realm_group));
+	// waiting an extra 3 secs for the container to initiate
+	Thread.sleep(3000);
 
 	// build the variables needed to return
 	keycloakprops.put("runningStatus", Boolean.toString(keycloak.isRunning()));
@@ -94,7 +90,10 @@ public class TestHelper {
 
     public Map<String, Object> stopKeycloakContainer() {
 
+	// stopping the keycloak container
 	keycloak.close();
+	// build the variables needed to return
+	keycloakprops.clear();
 	keycloakprops.put("runningStatus", Boolean.toString(keycloak.isRunning()));
 	return keycloakprops;
     }
