@@ -1,0 +1,69 @@
+
+{
+	"scenarioName": "GIVEN - I start the keycloak container, AND - perform REST call to acquire bearer token, THEN - stop the kc container",
+	"ignoreStepFailures" : "true",
+	"steps": [
+		{
+		// start the keycloak container
+		// Note: since this is made a reusable step as it can be  used in other testcases
+			"id": "reuse_start_kc_container_step",
+			"stepFile": "${JSON.FILE:testcases/commonsteps/start_kc_container_step.json}"
+		},
+		{
+		// perform REST call to login to keycloak and acquire token using password grant-type
+            "name": "kc_get_bearer_token",
+            "url": "http://${$.start_kc_container.response.host}:${$.start_kc_container.response.httpPort}/auth/realms/${keycloak.realm.name}/protocol/openid-connect/token",
+            "method": "POST",
+            "request": {
+            	"headers": {
+          			"Content-Type": "application/x-www-form-urlencoded"
+        		},
+              	"body": {
+              		"grant_type": "password",
+              		"username": "${keycloak.username}",
+              		"password": "${keycloak.password}",
+              		"client_id": "${keycloak.client.name}"
+                }
+           },
+            "verify": {
+                "status": 200,
+                "body": {
+                    "access_token": "$NOT.NULL",
+                    "token_type": "Bearer"
+
+                }
+            }
+        },
+        {
+		// perform REST call to login to keycloak and fail to acquire token using invalid password grant-type
+            "name": "kc_get_bearer_token_negative_test",
+            "url": "http://${$.start_kc_container.response.host}:${$.start_kc_container.response.httpPort}/auth/realms/${keycloak.realm.name}/protocol/openid-connect/token",
+            "method": "POST",
+            "request": {
+            	"headers": {
+          			"Content-Type": "application/x-www-form-urlencoded"
+        		},
+              	"body": {
+              		"grant_type": "password",
+              		"username": "${keycloak.username}",
+              		"password": "invalidpassword",
+              		"client_id": "${keycloak.client.name}"
+                }
+           },
+            "verify": {
+                "status": 401,
+                "body": {
+    				"error" : "invalid_grant",
+    				"error_description" : "Invalid user credentials"
+
+                }
+            }
+        },
+        {
+        // clean up by invoking the stop keycloak container step
+        // Note: since this is made a reusable step as it can be  used in other testcases
+			"id": "reuse_stop_kc_container_step",
+			"stepFile": "${JSON.FILE:testcases/commonsteps/stop_kc_container_step.json}"
+		}
+	]
+}

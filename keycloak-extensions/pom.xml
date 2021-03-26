@@ -11,6 +11,7 @@
   <packaging>jar</packaging>
 
   <dependencies>
+
     <dependency>
       <groupId>org.keycloak</groupId>
       <artifactId>keycloak-core</artifactId>
@@ -49,6 +50,20 @@
       <groupId>ch.qos.logback</groupId>
       <artifactId>logback-classic</artifactId>
     </dependency>
+	<dependency>
+	  <groupId>org.seleniumhq.selenium</groupId>
+	  <artifactId>selenium-java</artifactId>
+	</dependency>
+    <dependency>
+	  <groupId>org.jsmart</groupId>
+	  <artifactId>zerocode-tdd</artifactId>
+	  <exclusions>
+        <exclusion>
+          <groupId>org.jboss.resteasy</groupId>
+    	  <artifactId>resteasy-jaxrs</artifactId>
+        </exclusion>
+      </exclusions>
+	</dependency>
   </dependencies>
 
 </project>

@@ -1,0 +1,12 @@
+{
+	"name": "stop_kc_container",
+	"ignoreStep": false,
+	"url": "org.alvearie.utils.TestHelper",
+	"method": "stopKeycloakContainer",
+	"request": {
+		
+	},
+	"verify": {
+		"runningStatus": "false"
+	}
+}
