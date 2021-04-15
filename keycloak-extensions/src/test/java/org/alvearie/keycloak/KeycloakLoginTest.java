@@ -13,17 +13,15 @@ import org.junit.FixMethodOrder;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.MethodSorters;
+
 @FixMethodOrder(MethodSorters.NAME_ASCENDING)
 @EnvProperty("_${env}")
 @TargetEnv("kc_integration_test.properties")
 @RunWith(ZeroCodeUnitRunner.class)
 public class KeycloakLoginTest {
 
-	
     @Test
     @Scenario("testcases/login/login_to_keycloak.json")
-    public void testA_keycloak_login() throws Exception {
-    }
-    
+    public void testA_keycloak_login() throws Exception {}
 
 }

@@ -5,25 +5,22 @@ SPDX-License-Identifier: Apache-2.0
 */
 package org.alvearie.keycloak;
 
-import java.io.StringReader;
 import java.net.URI;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
+import java.util.Objects;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import javax.json.Json;
-import javax.json.JsonArray;
-import javax.json.JsonObject;
-import javax.json.JsonReader;
-import javax.json.JsonString;
-import javax.json.JsonValue;
+import javax.ws.rs.RuntimeType;
+import javax.ws.rs.client.Entity;
 import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.core.Response;
 
-import org.alvearie.keycloak.freemarker.Patient;
+import org.alvearie.keycloak.freemarker.PatientStruct;
 import org.jboss.logging.Logger;
 import org.jboss.resteasy.client.jaxrs.ResteasyClientBuilder;
 import org.jboss.resteasy.util.HttpHeaderNames;
@@ -46,6 +43,17 @@ import org.keycloak.services.Urls;
 import org.keycloak.services.util.DefaultClientSessionContext;
 import org.keycloak.sessions.AuthenticationSessionModel;
 
+import com.ibm.fhir.core.FHIRMediaType;
+import com.ibm.fhir.model.resource.Bundle;
+import com.ibm.fhir.model.resource.Bundle.Entry;
+import com.ibm.fhir.model.resource.Patient;
+import com.ibm.fhir.model.type.Date;
+import com.ibm.fhir.model.type.HumanName;
+import com.ibm.fhir.model.type.Url;
+import com.ibm.fhir.model.type.code.BundleType;
+import com.ibm.fhir.model.type.code.HTTPVerb;
+import com.ibm.fhir.provider.FHIRProvider;
+
 /**
  * Present a patient context picker when the client requests the launch/patient scope and the
  * user record has multiple resourceId attributes. The selection is stored in a UserSessionNote
@@ -61,12 +69,11 @@ public class PatientSelectionForm implements Authenticator {
     private static final String SMART_SCOPE_PATIENT_READ = "patient/Patient.read";
     private static final String SMART_SCOPE_LAUNCH_PATIENT = "launch/patient";
 
-    private static final int requestedPageSize = 10;
-
     private WebTarget fhirClient;
 
     public PatientSelectionForm() {
         fhirClient = ResteasyClientBuilder.newClient()
+                .register(new FHIRProvider(RuntimeType.CLIENT))
                 .target(URI.create(FHIR_BASE_URL));
     }
 
@@ -84,62 +91,55 @@ public class PatientSelectionForm implements Authenticator {
             return;
         }
 
-        String accessToken = buildInternalAccessToken(context);
-        // use RESTEasy to make the call to the resource server
+        if (context.getUser() == null) {
+            fail(context, "Expected a user but found null");
+            return;
+        }
 
-        Response fhirResponse = fhirClient.path("Patient")
-                .queryParam("_summary", "true")
-                .queryParam("_count", "10")
+        List<String> resourceIds = context.getUser().getAttributeStream("resourceId")
+                .flatMap(a -> Arrays.stream(a.split(" ")))
+                .map(String::trim)
+                .filter(s -> !s.isEmpty())
+                .collect(Collectors.toList());
+        if (resourceIds.size() == 0) {
+            fail(context, "Expected user to have one or more resourceId attributes, but found none");
+            return;
+        }
+        if (resourceIds.size() == 1) {
+            succeed(context, resourceIds.get(0));
+            return;
+        }
+
+        String accessToken = buildInternalAccessToken(context, resourceIds);
+
+        Bundle requestBundle = buildRequestBundle(resourceIds);
+        Response fhirResponse = fhirClient
                 .request(MediaType.APPLICATION_JSON)
                 .header(HttpHeaderNames.AUTHORIZATION, "Bearer " + accessToken)
-                .get();
+                .post(Entity.entity(requestBundle, FHIRMediaType.APPLICATION_FHIR_JSON_TYPE));
 
         if (fhirResponse.getStatus() != 200) {
             String msg = "Error while retrieving Patient resources for the selection form";
             LOG.warnf(msg);
-            LOG.warnf("Response with code " + fhirResponse.getStatus() + "%s%n", fhirResponse.readEntity(String.class));
+            LOG.warnf("Response with code " + fhirResponse.getStatus() + "%n%s", fhirResponse.readEntity(String.class));
             context.failure(AuthenticationFlowError.INTERNAL_ERROR,
                     Response.status(302)
                     .header("Location", context.getAuthenticationSession().getRedirectUri() +
                             "?error=server_error" +
                             "&error_description=" + msg)
                     .build());
+            return;
+        }
+
+        List<PatientStruct> patients = gatherPatientInfo(fhirResponse.readEntity(Bundle.class));
+        if (patients.isEmpty()) {
+            succeed(context, resourceIds.get(0));
+            return;
+        }
+
+        if (patients.size() == 1) {
+            succeed(context, patients.get(0).getId());
         } else {
-            String bundle = fhirResponse.readEntity(String.class);
-            JsonReader reader = Json.createReader(new StringReader(bundle));
-            JsonObject bundleObj = reader.readObject();
-            JsonArray links = bundleObj.getJsonArray("link");
-            JsonArray entries = bundleObj.getJsonArray("entry");
-
-            if (hasNextLink(links)) {
-                // TODO: support paging on the form?
-                String total = bundleObj.containsKey("total") ? Integer.toString(bundleObj.getInt("total")) : "over " + requestedPageSize;
-                LOG.warn("Patient search returned " + total + " matches; using the first " + requestedPageSize);
-            }
-
-            List<Patient> patients = new ArrayList<>();
-
-            for (JsonValue jsonValue : entries) {
-                JsonObject patient = jsonValue.asJsonObject().getJsonObject("resource");
-
-                String patientId = patient.getString("id");
-
-                String patientName = "Missing Name";
-                JsonArray names = patient.getJsonArray("name");
-                if (names == null || names.size() == 0) {
-                    LOG.warn("Patient[id=" + patient.getString("id") + "] has no name; using placeholder");
-                } else {
-                    if (names.size() > 1) {
-                        LOG.warn("Patient[id=" + patient.getString("id") + "] has multiple names; using the first one");
-                    }
-                    patientName = constructName(names.get(0));
-                }
-
-                String patientDOB = patient.containsKey("birthDate") ? patient.getString("birthDate") : "missing";
-
-                patients.add(new Patient(patientId, patientName, patientDOB));
-            }
-
             Response response = context.form()
                     .setAttribute("patients", patients)
                     .createForm("patient-select-form.ftl");
@@ -148,32 +148,7 @@ public class PatientSelectionForm implements Authenticator {
         }
     }
 
-    private String constructName(JsonValue name) {
-        String patientName;
-        JsonObject nameObj = name.asJsonObject();
-        if (nameObj.containsKey("text")) {
-            patientName = nameObj.getJsonString("text").getString();
-        } else {
-            JsonArray given = nameObj.getJsonArray("given");
-            JsonString family = name.asJsonObject().getJsonString("family");
-            patientName = Stream.concat(given.stream(), Stream.of(family))
-                    .filter(g -> g instanceof JsonString)
-                    .map(s -> ((JsonString) s).getString())
-                    .collect(Collectors.joining(" "));
-        }
-        return patientName;
-    }
-
-    private boolean hasNextLink(JsonArray links) {
-        for (JsonValue link : links) {
-            if (link instanceof JsonObject && "next".equals(link.asJsonObject().getString("relation"))) {
-                return true;
-            }
-        }
-        return false;
-    }
-
-    private String buildInternalAccessToken(AuthenticationFlowContext context) {
+    private String buildInternalAccessToken(AuthenticationFlowContext context, List<String> resourceIds) {
         KeycloakSession session = context.getSession();
         AuthenticationSessionModel authSession = context.getAuthenticationSession();
         UserModel user = context.getUser();
@@ -189,6 +164,7 @@ public class PatientSelectionForm implements Authenticator {
         authedClientSession.setNote(OIDCLoginProtocol.ISSUER,
                 Urls.realmIssuer(session.getContext().getUri().getBaseUri(), context.getRealm().getName()));
 
+        // Note: this depends on the corresponding string being registered as a valid scope for this client, otherwise it comes back empty
         Stream<ClientScopeModel> readPatient = TokenManager.getRequestedClientScopes(SMART_SCOPE_PATIENT_READ, client);
         ClientSessionContext clientSessionCtx = DefaultClientSessionContext.fromClientSessionAndClientScopes(authedClientSession,
                 readPatient, session);
@@ -200,8 +176,86 @@ public class PatientSelectionForm implements Authenticator {
         AccessToken accessToken = tokenManager.createClientAccessToken(session, context.getRealm(), authSession.getClient(),
                 context.getUser(), userSession, clientSessionCtx);
 
+        // Explicitly override the scope string with what we need (less brittle than depending on this to exist as a client scope)
+        accessToken.setScope(SMART_SCOPE_PATIENT_READ);
+
         JsonWebToken jwt = accessToken.audience(requestedAudience);
+        jwt.setOtherClaims("patient_id", resourceIds);
         return session.tokens().encode(jwt);
+    }
+
+    private Bundle buildRequestBundle(List<String> resourceIds) {
+        Bundle.Builder requestBuilder = Bundle.builder()
+                .type(BundleType.BATCH);
+        resourceIds.stream()
+                .map(id -> Entry.Request.builder()
+                        .method(HTTPVerb.GET)
+                        .url(Url.of("Patient/" + id))
+                        .build())
+                .map(request -> Entry.builder()
+                        .request(request)
+                        .build())
+                .forEach(entry -> requestBuilder.entry(entry));
+        return requestBuilder.build();
+    }
+
+    private void fail(AuthenticationFlowContext context, String msg) {
+        LOG.warn(msg);
+        context.failure(AuthenticationFlowError.INTERNAL_ERROR,
+                Response.status(302)
+                .header("Location", context.getAuthenticationSession().getRedirectUri() +
+                        "?error=server_error" +
+                        "&error_description=" + msg)
+                .build());
+    }
+
+    private void succeed(AuthenticationFlowContext context, String patient) {
+        // Add selected information to authentication session
+        context.getAuthenticationSession().setUserSessionNote("patient_id", patient);
+        context.success();
+    }
+
+    private List<PatientStruct> gatherPatientInfo(Bundle fhirResponse) {
+        List<PatientStruct> patients = new ArrayList<>();
+
+        for (Entry entry : fhirResponse.getEntry()) {
+            if (entry.getResponse() == null || !entry.getResponse().getStatus().hasValue() ||
+                    !entry.getResponse().getStatus().getValue().startsWith("200")) {
+                continue;
+            }
+
+            Patient patient = entry.getResource().as(Patient.class);
+
+            String patientId = patient.getId();
+
+            String patientName = "Missing Name";
+            if (patient.getName().isEmpty()) {
+                LOG.warn("Patient[id=" + patient.getId() + "] has no name; using placeholder");
+            } else {
+                if (patient.getName().size() > 1) {
+                    LOG.warn("Patient[id=" + patient.getId() + "] has multiple names; using the first one");
+                }
+                patientName = constructSimpleName(patient.getName().get(0));
+            }
+
+            String patientDOB = patient.getBirthDate() == null ? "missing"
+                    : Date.PARSER_FORMATTER.format(patient.getBirthDate().getValue());
+
+            patients.add(new PatientStruct(patientId, patientName, patientDOB));
+        }
+
+        return patients;
+    }
+
+    private String constructSimpleName(HumanName name) {
+        if (name.getText() != null && name.getText().hasValue()) {
+            return name.getText().getValue();
+        }
+
+        return Stream.concat(name.getGiven().stream(), Stream.of(name.getFamily()))
+                .map(n -> n.getValue())
+                .filter(Objects::nonNull)
+                .collect(Collectors.joining(" "));
     }
 
     @Override
@@ -235,10 +289,7 @@ public class PatientSelectionForm implements Authenticator {
             return;
         }
 
-        // Add selected information to authentication session
-        context.getAuthenticationSession().setUserSessionNote("patient_id", patient);
-
-        context.success();
+        succeed(context, patient);
     }
 
     @Override

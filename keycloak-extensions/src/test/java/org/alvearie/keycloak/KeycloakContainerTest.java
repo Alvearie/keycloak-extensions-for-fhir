@@ -57,14 +57,14 @@ public class KeycloakContainerTest {
                 .clientId(CLIENT_ID)
                 .build();
         KeycloakConfigurator configurator = new KeycloakConfigurator(adminClient);
-       KeycloakConfig config = new KeycloakConfig("keycloak-config.json");
+        KeycloakConfig config = new KeycloakConfig("keycloak-config.json");
         configurator.initializeRealm("test", config.getPropertyGroup("test"));
     }
 
     @AfterClass
     public static void end() {
         // no cleanup to enable re-use of the container
-    	keycloak.close();
+        //keycloak.close();
     }
 
     @Test
@@ -81,29 +81,27 @@ public class KeycloakContainerTest {
         connection.setRequestMethod("GET");
         assertEquals(connection.getResponseCode(), 200);
     }
-    
+
     /**
-     * Example of running the same test that we exercised in KeycloakLoginTest class, zercode style
-     * Here we are relying on BasicHttpClient module that is part of the zerocode dependency
-     * 
-     * In rare cases, where declarative style testing do not work out, we can use this model for
-     * test automation as well.
-     * @throws Exception 
+     * Example of running the same test that we exercised in KeycloakLoginTest class, zerocode style.
+     * Here we are relying on BasicHttpClient module that is part of the zerocode dependency.
+     *
+     * In rare cases, where declarative style testing does not work out, we can use this model for
+     * test automation instead.
+     *
+     * @throws Exception
      */
     @Test
     public void passwordGrantLoginTest() throws Exception {
-    	System.out.println("Host is: " + keycloak.getHost());
-    	String tokenURL = "http://localhost:" + keycloak.getHttpPort() + TOKEN_ENDPOINT;
-    	String jsonbody = "{\"grant_type\":\"password\",\"username\":\"" + USERNAME + "\",\"password\":\"" + PASSWORD + "\",\"client_id\":\""
+        System.out.println("Host is: " + keycloak.getHost());
+        String tokenURL = "http://localhost:" + keycloak.getHttpPort() + TOKEN_ENDPOINT;
+        String jsonbody = "{\"grant_type\":\"password\",\"username\":\"" + USERNAME + "\",\"password\":\"" + PASSWORD + "\",\"client_id\":\""
                 + KC_CLIENT + "\"}";
-    	BasicHttpClient bh = new BasicHttpClient();
+        BasicHttpClient bh = new BasicHttpClient();
         Map<String, Object> headers = new HashMap<String, Object>();
         headers.put("Content-Type", "application/x-www-form-urlencoded");
         Response r;
-            r = bh.execute(
-            		tokenURL,
-                    "POST", headers, null, jsonbody);
-
+            r = bh.execute(tokenURL, "POST", headers, null, jsonbody);
             System.out.println(r.getEntity().toString());
     }
 }

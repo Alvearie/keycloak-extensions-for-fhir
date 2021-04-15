@@ -53,7 +53,7 @@ public class PatientSelectionFormFactory implements AuthenticatorFactory {
 
     @Override
     public String getHelpText() {
-        return "Tenant Selection Authenticator.";
+        return "A patient context picker for supporting the launch/patient scope.";
     }
 
     @Override

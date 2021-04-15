@@ -62,7 +62,7 @@ public class AudienceValidatorFactory implements AuthenticatorFactory {
 
     @Override
     public List<ProviderConfigProperty> getConfigProperties() {
-        return Collections.singletonList(new ProviderConfigProperty("Audiences", "Audiences",
+        return Collections.singletonList(new ProviderConfigProperty(AUDIENCES, AUDIENCES,
                 "Valid audiences for clients to request", ProviderConfigProperty.MULTIVALUED_STRING_TYPE, null));
     }
 
