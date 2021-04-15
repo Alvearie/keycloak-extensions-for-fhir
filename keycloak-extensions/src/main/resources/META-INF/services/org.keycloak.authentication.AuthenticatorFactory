@@ -1,1 +1,2 @@
 org.alvearie.keycloak.AudienceValidatorFactory
+org.alvearie.keycloak.PatientSelectionFormFactory
