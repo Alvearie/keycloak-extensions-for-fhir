@@ -22,7 +22,10 @@ import java.util.List;
 public class AudienceValidatorFactory implements AuthenticatorFactory {
 
     private static final String PROVIDER_ID = "audience-validator";
-    static final String AUDIENCES = "Audiences";
+
+    static final String AUDIENCES_PROP_NAME = "audiences";
+    private static final String AUDIENCES_PROP_LABEL = "Allowed Audiences";
+    private static final String AUDIENCES_PROP_DESCRIPTION = "Valid audiences for clients to request.";
 
     @Override
     public String getDisplayType() {
@@ -62,8 +65,8 @@ public class AudienceValidatorFactory implements AuthenticatorFactory {
 
     @Override
     public List<ProviderConfigProperty> getConfigProperties() {
-        return Collections.singletonList(new ProviderConfigProperty(AUDIENCES, AUDIENCES,
-                "Valid audiences for clients to request", ProviderConfigProperty.MULTIVALUED_STRING_TYPE, null));
+        return Collections.singletonList(new ProviderConfigProperty(AUDIENCES_PROP_NAME, AUDIENCES_PROP_LABEL,
+                AUDIENCES_PROP_DESCRIPTION, ProviderConfigProperty.MULTIVALUED_STRING_TYPE, null));
     }
 
     @Override

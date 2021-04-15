@@ -13,6 +13,7 @@ import org.keycloak.models.KeycloakSession;
 import org.keycloak.models.KeycloakSessionFactory;
 import org.keycloak.provider.ProviderConfigProperty;
 
+import java.util.Collections;
 import java.util.List;
 
 /**
@@ -21,6 +22,12 @@ import java.util.List;
 public class PatientSelectionFormFactory implements AuthenticatorFactory {
 
     private static final String PROVIDER_ID = "auth-select-patient";
+
+    static final String INTERNAL_FHIR_URL_PROP_NAME = "internalFhirUrl";
+    private static final String INTERNAL_FHIR_URL_PROP_LABEL = "FHIR Base URL";
+    private static final String INTERNAL_FHIR_URL_PROP_DESCRIPTION = "The internal base URL of the FHIR resource server"
+            + " for retrieving Patient resources. This can differ from the external base URL used by the client in"
+            + " the 'aud' parameter.";
 
     @Override
     public String getDisplayType() {
@@ -34,7 +41,7 @@ public class PatientSelectionFormFactory implements AuthenticatorFactory {
 
     @Override
     public boolean isConfigurable() {
-        return false;
+        return true;
     }
 
     public static final AuthenticationExecutionModel.Requirement[] REQUIREMENT_CHOICES = {
@@ -58,7 +65,8 @@ public class PatientSelectionFormFactory implements AuthenticatorFactory {
 
     @Override
     public List<ProviderConfigProperty> getConfigProperties() {
-        return null;
+        return Collections.singletonList(new ProviderConfigProperty(INTERNAL_FHIR_URL_PROP_NAME, INTERNAL_FHIR_URL_PROP_LABEL,
+                INTERNAL_FHIR_URL_PROP_DESCRIPTION, ProviderConfigProperty.STRING_TYPE, null));
     }
 
     @Override

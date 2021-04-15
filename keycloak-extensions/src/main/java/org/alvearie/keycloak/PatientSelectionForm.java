@@ -5,7 +5,6 @@ SPDX-License-Identifier: Apache-2.0
 */
 package org.alvearie.keycloak;
 
-import java.net.URI;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -14,8 +13,8 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import javax.ws.rs.RuntimeType;
+import javax.ws.rs.client.Client;
 import javax.ws.rs.client.Entity;
-import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.core.Response;
@@ -28,6 +27,7 @@ import org.keycloak.authentication.AuthenticationFlowContext;
 import org.keycloak.authentication.AuthenticationFlowError;
 import org.keycloak.authentication.Authenticator;
 import org.keycloak.models.AuthenticatedClientSessionModel;
+import org.keycloak.models.AuthenticatorConfigModel;
 import org.keycloak.models.ClientModel;
 import org.keycloak.models.ClientScopeModel;
 import org.keycloak.models.ClientSessionContext;
@@ -63,18 +63,15 @@ public class PatientSelectionForm implements Authenticator {
 
     private static final Logger LOG = Logger.getLogger(PatientSelectionForm.class);
 
-    private static final String FHIR_BASE_URL = "http://localhost:9080/fhir-server/api/v4";
-
     private static final String SMART_AUDIENCE_PARAM = "aud";
     private static final String SMART_SCOPE_PATIENT_READ = "patient/Patient.read";
     private static final String SMART_SCOPE_LAUNCH_PATIENT = "launch/patient";
 
-    private WebTarget fhirClient;
+    private Client fhirClient;
 
     public PatientSelectionForm() {
         fhirClient = ResteasyClientBuilder.newClient()
-                .register(new FHIRProvider(RuntimeType.CLIENT))
-                .target(URI.create(FHIR_BASE_URL));
+                .register(new FHIRProvider(RuntimeType.CLIENT));
     }
 
     @Override
@@ -110,10 +107,16 @@ public class PatientSelectionForm implements Authenticator {
             return;
         }
 
+        AuthenticatorConfigModel config = context.getAuthenticatorConfig();
+        if (config == null || !config.getConfig().containsKey(PatientSelectionFormFactory.INTERNAL_FHIR_URL_PROP_NAME)) {
+            fail(context, "The Patient Selection Authenticator must be configured with a valid FHIR base URL");
+            return;
+        }
+
         String accessToken = buildInternalAccessToken(context, resourceIds);
 
         Bundle requestBundle = buildRequestBundle(resourceIds);
-        Response fhirResponse = fhirClient
+        Response fhirResponse = fhirClient.target(config.getConfig().get(PatientSelectionFormFactory.INTERNAL_FHIR_URL_PROP_NAME))
                 .request(MediaType.APPLICATION_JSON)
                 .header(HttpHeaderNames.AUTHORIZATION, "Bearer " + accessToken)
                 .post(Entity.entity(requestBundle, FHIRMediaType.APPLICATION_FHIR_JSON_TYPE));
@@ -170,7 +173,13 @@ public class PatientSelectionForm implements Authenticator {
                 readPatient, session);
 
         String requestedAudience = context.getUriInfo().getQueryParameters().getFirst(SMART_AUDIENCE_PARAM);
-        // Explicit decision not to check the requested audience against the internal URL of the FHIR Server
+        if (requestedAudience == null) {
+            String internalFhirUrl = context.getAuthenticatorConfig().getConfig().get(PatientSelectionFormFactory.INTERNAL_FHIR_URL_PROP_NAME);
+            LOG.info("Client request is missing the 'aud' parameter, using '" + internalFhirUrl + "' from config.");
+            requestedAudience = internalFhirUrl;
+        }
+
+        // Explicit decision not to check the requested audience against the configured internal FHIR URL
         // Checking of the requested audience should be performed in a previous step by the AudienceValidator
         TokenManager tokenManager = new TokenManager();
         AccessToken accessToken = tokenManager.createClientAccessToken(session, context.getRealm(), authSession.getClient(),

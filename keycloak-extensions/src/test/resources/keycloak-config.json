@@ -60,7 +60,8 @@
 		},
 		"defaultDefaultClientScopes": ["profile"],
 		"defaultOptionalClientScopes": [
-			"fhirUser"
+			"fhirUser",
+			"launch/patient"
 		],
 		"clients": {
 			"test": {
