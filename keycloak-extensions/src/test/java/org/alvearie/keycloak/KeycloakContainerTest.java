@@ -25,6 +25,7 @@ import org.junit.Test;
 import org.keycloak.admin.client.Keycloak;
 import org.keycloak.admin.client.KeycloakBuilder;
 import org.keycloak.representations.info.ServerInfoRepresentation;
+import org.testcontainers.containers.BindMode;
 
 import dasniko.testcontainers.keycloak.KeycloakContainer;
 
@@ -39,6 +40,7 @@ public class KeycloakContainerTest {
     private static KeycloakContainer keycloak;
     static {
         keycloak = new KeycloakContainer().withExtensionClassesFrom("target/classes");
+        keycloak.addFileSystemBind("target/dependency", "/opt/jboss/keycloak/modules/system/layers/base/com/ibm/fhir/main", BindMode.READ_ONLY);
         // Shouldn't be needed, but sometimes is: https://github.com/dasniko/testcontainers-keycloak/issues/15
         keycloak.withEnv("DB_VENDOR", "H2");
         keycloak.withReuse(true);

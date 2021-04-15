@@ -12,6 +12,19 @@
 
   <dependencies>
 
+    <!-- The com.ibm.fhir dependencies go first to tightly control the versions
+         because we need to ensure they match the versions listed in module.xml -->
+    <dependency>
+      <groupId>com.ibm.fhir</groupId>
+      <artifactId>fhir-provider</artifactId>
+      <!-- dependent on https://github.com/IBM/FHIR/pull/2248 -->
+      <version>4.7.0-SNAPSHOT</version>
+    </dependency>
+    <dependency>
+      <groupId>com.ibm.fhir</groupId>
+      <artifactId>fhir-model</artifactId>
+      <version>4.7.0-SNAPSHOT</version>
+    </dependency>
     <dependency>
       <groupId>org.keycloak</groupId>
       <artifactId>keycloak-core</artifactId>
@@ -27,16 +40,6 @@
     <dependency>
       <groupId>org.keycloak</groupId>
       <artifactId>keycloak-server-spi-private</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>com.ibm.fhir</groupId>
-      <artifactId>fhir-model</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>com.ibm.fhir</groupId>
-      <artifactId>fhir-provider</artifactId>
-      <!-- dependent on https://github.com/IBM/FHIR/pull/2248 -->
-      <version>4.7.0-SNAPSHOT</version>
     </dependency>
     <dependency>
       <groupId>${project.groupId}</groupId>
@@ -76,4 +79,52 @@
     </dependency>
   </dependencies>
 
+  <build>
+    <plugins>
+      <plugin>
+        <artifactId>maven-dependency-plugin</artifactId>
+        <version>3.1.2</version>
+        <executions>
+          <execution>
+            <id>copy-dependencies</id>
+            <phase>package</phase>
+            <goals>
+              <goal>copy-dependencies</goal>
+            </goals>
+            <configuration>
+              <artifactItems>
+                <artifactItem>
+                  <groupId>com.ibm.fhir</groupId>
+                  <artifactId>fhir-provider</artifactId>
+                  <version>4.7.0-SNAPSHOT</version>
+                </artifactItem>
+              </artifactItems>
+              <includeScope>runtime</includeScope>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
+      <plugin>
+        <artifactId>maven-resources-plugin</artifactId>
+        <version>3.2.0</version>
+        <executions>
+          <execution>
+            <id>copy-resources</id>
+            <phase>compile</phase>
+            <goals>
+              <goal>copy-resources</goal>
+            </goals>
+            <configuration>
+              <outputDirectory>${project.build.directory}/dependency</outputDirectory>
+              <resources>
+                <resource>
+                  <directory>src/main/etc</directory>
+                </resource>
+              </resources>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
+    </plugins>
+  </build>
 </project>
