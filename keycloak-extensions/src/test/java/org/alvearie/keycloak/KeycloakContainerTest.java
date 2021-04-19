@@ -102,8 +102,7 @@ public class KeycloakContainerTest {
         BasicHttpClient bh = new BasicHttpClient();
         Map<String, Object> headers = new HashMap<String, Object>();
         headers.put("Content-Type", "application/x-www-form-urlencoded");
-        Response r;
-            r = bh.execute(tokenURL, "POST", headers, null, jsonbody);
-            System.out.println(r.getEntity().toString());
+        Response r = bh.execute(tokenURL, "POST", headers, null, jsonbody);
+        System.out.println(r.getEntity().toString());
     }
 }

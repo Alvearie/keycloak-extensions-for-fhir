@@ -10,9 +10,15 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
+import java.util.Set;
 import java.util.stream.Collectors;
 
+import javax.json.JsonObject;
+import javax.json.JsonString;
+import javax.json.JsonValue;
 import javax.ws.rs.core.Response;
+import javax.ws.rs.core.Response.Status.Family;
 
 import org.alvearie.keycloak.config.util.KeycloakConfig;
 import org.alvearie.keycloak.config.util.PropertyGroup;
@@ -141,7 +147,7 @@ public class KeycloakConfigurator {
         // Initialize authentication flows
         PropertyGroup authenticationFlowsPg = realmPg.getPropertyGroup(KeycloakConfig.PROP_AUTHENTICATION_FLOWS);
         if (authenticationFlowsPg != null) {
-            for (PropertyEntry authenticationFlowPe: authenticationFlowsPg.getProperties()) {
+            for (PropertyEntry authenticationFlowPe : authenticationFlowsPg.getProperties()) {
                 String authenticationFlowAlias = authenticationFlowPe.getName();
                 PropertyGroup authenticationFlowPg = authenticationFlowsPg.getPropertyGroup(authenticationFlowAlias);
                 initializeAuthenticationFlow(realms.realm(realmName).flows(), authenticationFlowAlias, authenticationFlowPg);
@@ -195,6 +201,10 @@ public class KeycloakConfigurator {
         }
 
         // Update realm settings
+        String browserFlow = realmPg.getStringProperty(KeycloakConfig.PROP_BROWSER_FLOW);
+        if (browserFlow != null) {
+            realm.setBrowserFlow(browserFlow);
+        }
         realm.setEnabled(realmPg.getBooleanProperty(KeycloakConfig.PROP_REALM_ENABLED));
         realms.realm(realmName).update(realm);
     }
@@ -534,8 +544,41 @@ public class KeycloakConfigurator {
         // Get authentication flow
         AuthenticationFlowRepresentation authenticationFlow = getAuthenticationFlowByAlias(authMgmt, authenticationFlowAlias);
         if (authenticationFlow == null) {
-            throw new RuntimeException("Authentication flow does not exist");
+            authenticationFlow = new AuthenticationFlowRepresentation();
+            authenticationFlow.setAlias(authenticationFlowAlias);
+            authenticationFlow.setTopLevel(true);
+            authenticationFlow.setProviderId(authenticationFlowPg.getStringProperty("providerId"));
+            authenticationFlow.setBuiltIn(authenticationFlowPg.getBooleanProperty("builtIn"));
+
+//          "description": "browser based authentication",
+//          "providerId": "basic-flow",
+//          "topLevel": true,
+//          "builtIn": false,
+//          "authenticationExecutions": [
+//              {
+//                  "requirement": "ALTERNATIVE",
+//                  "priority": 30,
+//                  "flowAlias": "SMART App Launch forms",
+//                  "userSetupAllowed": false,
+//                  "autheticatorFlow": true
+//              }
+//          ]
+
+            Response response = authMgmt.createFlow(authenticationFlow);
+
+            if (response.getStatusInfo().getFamily() == Family.SUCCESSFUL) {
+                String path = response.getLocation().getPath();
+                String id = path.substring(path.lastIndexOf("/") + 1);
+                System.out.println("Created flow with id '" + id + "'");
+                authenticationFlow.setId(id);
+                updateFlowWithExecutions(authMgmt, authenticationFlowPg, authenticationFlow);
+            } else {
+                System.err.println("Failed to create flow; status code '" + response.getStatus() + "'");
+                System.err.println(response.readEntity(String.class));
+            }
         }
+
+        updateFlowWithExecutions(authMgmt, authenticationFlowPg, authenticationFlow);
 
         // Update identity provider redirector
         for (PropertyEntry authExecutionPe: authenticationFlowPg.getProperties()) {
@@ -546,6 +589,131 @@ public class KeycloakConfigurator {
                 initializeIdentityProviderRedirector(authMgmt, authenticationFlowAlias, identityProviderRedirectorAlias, identityProviderRedirectorPg);
             }
         }
+    }
+
+    private void updateFlowWithExecutions(AuthenticationManagementResource authMgmt, PropertyGroup authenticationFlowPg,
+            AuthenticationFlowRepresentation authenticationFlow) throws Exception {
+        PropertyGroup authenticationExecutionsPg = authenticationFlowPg.getPropertyGroup("authenticationExecutions");
+        JsonObject jsonObject = authenticationFlowPg.getJsonValue("authenticationExecutions").asJsonObject();
+        for (String entry : jsonObject.keySet()) {
+            PropertyGroup entryProps = authenticationExecutionsPg.getPropertyGroup(entry);
+
+            HashMap<String, String> executionParams = new HashMap<String, String>();
+
+            String description = entryProps.getStringProperty("description");
+            executionParams.put("description", description);
+
+            Boolean isFlow = entryProps.getBooleanProperty("authenticatorFlow", false);
+            if (isFlow) {
+                executionParams.put("alias", entry);
+                executionParams.put("type", "basic-flow");
+
+                AuthenticationExecutionInfoRepresentation executionFlow = getOrCreateExecution(authMgmt,
+                        authenticationFlow.getAlias(), entry, isFlow, executionParams);
+
+                // the above "alias" actually gets saved as the display name for some reason, but the alias is what we need to add subflow executions
+                executionFlow.setAlias(entry);
+                executionFlow.setRequirement(entryProps.getStringProperty("requirement"));
+                authMgmt.updateExecutions(authenticationFlow.getAlias(), executionFlow);
+
+                PropertyGroup childExecutions = entryProps.getPropertyGroup("authenticationExecutions");
+                for (PropertyEntry childEntry : childExecutions.getProperties()) {
+                    // TODO: see if we can get the display name from the authenticator provider_id somehow, instead of requiring it in our config
+                    String displayName = childEntry.getName();
+                    PropertyGroup childEntryPg = childExecutions.getPropertyGroup(displayName);
+                    String authenticator = childEntryPg.getStringProperty("authenticator");
+
+                    Boolean childIsFlow = childEntryPg.getBooleanProperty("authenticatorFlow", false);
+                    if (childIsFlow) {
+                        throw new UnsupportedOperationException("Nest subflows are not yet supported");
+                    }
+
+                    HashMap<String, String> childExecutionParams = new HashMap<String, String>();
+                    childExecutionParams.put("provider", authenticator);
+                    AuthenticationExecutionInfoRepresentation childExecution = getOrCreateExecution(authMgmt, entry, displayName, childIsFlow, childExecutionParams);
+
+                    String configAlias = childEntryPg.getStringProperty("configAlias");
+                    JsonValue configJson = childEntryPg.getJsonValue("config");
+                    if (configJson != null) {
+                        Map<String, String> config = buildConfigMap(configJson, configAlias);
+
+                        AuthenticatorConfigRepresentation authenticatorConfig = getOrCreateAuthenticatorConfig(authMgmt, childExecution, configAlias, config);
+                        authenticatorConfig.setConfig(config);
+                        authMgmt.updateAuthenticatorConfig(authenticatorConfig.getId(), authenticatorConfig);
+
+                        childExecution.setAuthenticationConfig(configAlias);
+                    }
+
+                    childExecution.setRequirement(childEntryPg.getStringProperty("requirement"));
+                    authMgmt.updateExecutions(authenticationFlow.getAlias(), childExecution);
+                }
+            } else {
+                executionParams.put("authenticator", entry);
+                getOrCreateExecution(authMgmt, authenticationFlow.getAlias(), entry, isFlow, executionParams);
+
+                // TODO authenticatorConfig
+                executionParams.put("priority", Integer.toString(entryProps.getIntProperty("priority")));
+            }
+
+        }
+    }
+
+    private AuthenticatorConfigRepresentation getOrCreateAuthenticatorConfig(AuthenticationManagementResource authMgmt,
+            AuthenticationExecutionInfoRepresentation execution, String configAlias, Map<String, String> config) {
+
+        AuthenticatorConfigRepresentation authenticatorConfig = null;
+
+        String configId = execution.getAuthenticationConfig();
+        if (configId != null) {
+            authenticatorConfig = authMgmt.getAuthenticatorConfig(configId);
+        } else {
+            authenticatorConfig = new AuthenticatorConfigRepresentation();
+            authenticatorConfig.setAlias(configAlias);
+            Response response = authMgmt.newExecutionConfig(execution.getId(), authenticatorConfig);
+
+            if (response.getStatusInfo().getFamily() == Family.SUCCESSFUL) {
+                String path = response.getLocation().getPath();
+                String id = path.substring(path.lastIndexOf("/") + 1);
+                System.out.println("Created authenticator config with id '" + id + "'");
+                authenticatorConfig.setId(id);
+            } else {
+                System.err.println("Failed to create authenticator config; status code '" + response.getStatus() + "'");
+                System.err.println(response.readEntity(String.class));
+            }
+        }
+
+        return authenticatorConfig;
+    }
+
+    private Map<String, String> buildConfigMap(JsonValue configJson, String configAlias) {
+        Map<String, String> config = new HashMap<String, String>();
+        Set<Entry<String,JsonValue>> entrySet = configJson.asJsonObject().entrySet();
+        for (Entry<String, JsonValue> configEntry : entrySet) {
+            JsonValue value = configEntry.getValue();
+            if (value instanceof JsonString) {
+                config.put(configEntry.getKey(), ((JsonString) value).getString());
+            } else {
+                System.err.println("Expected config of type String, but found " + value.getValueType());
+            }
+        }
+        return config;
+    }
+
+    private AuthenticationExecutionInfoRepresentation getOrCreateExecution(AuthenticationManagementResource authMgmt,
+            String flowAlias, String displayName, boolean isFlow, HashMap<String, String> executionParams) {
+        AuthenticationExecutionInfoRepresentation savedExecution = getExecutionByDisplayName(authMgmt, flowAlias, displayName);
+        if (savedExecution == null) {
+            if (isFlow) {
+                authMgmt.addExecutionFlow(flowAlias, executionParams);
+            } else {
+                authMgmt.addExecution(flowAlias, executionParams);
+            }
+            savedExecution = getExecutionByDisplayName(authMgmt, flowAlias, displayName);
+        }
+        if (savedExecution == null) {
+            throw new RuntimeException("Unable to create execution '" + displayName + "'");
+        }
+        return savedExecution;
     }
 
     /**
@@ -829,7 +997,7 @@ public class KeycloakConfigurator {
 
 
     /**
-     * Gets the authenication flow by alias.
+     * Gets the authentication flow by alias.
      * @param authMgmt the authorization management
      * @param authenticationFlowAlias the authentication flow alias
      * @return the authorization flow, or null if not found
@@ -838,6 +1006,22 @@ public class KeycloakConfigurator {
         for (AuthenticationFlowRepresentation flow : authMgmt.getFlows()) {
             if (authenticationFlowAlias.equals(flow.getAlias())) {
                 return flow;
+            }
+        }
+        return null;
+    }
+
+    /**
+     * Gets the authentication execution by alias.
+     * @param authMgmt the authorization management
+     * @param authenticationFlowAlias the authentication flow alias
+     * @return the execution info, or null if not found
+     */
+    private AuthenticationExecutionInfoRepresentation getExecutionByDisplayName(AuthenticationManagementResource authMgmt, String authenticationFlowAlias,
+            String executionDisplayName) {
+        for (AuthenticationExecutionInfoRepresentation execution : authMgmt.getExecutions(authenticationFlowAlias)) {
+            if (executionDisplayName.equals(execution.getDisplayName())) {
+                return execution;
             }
         }
         return null;

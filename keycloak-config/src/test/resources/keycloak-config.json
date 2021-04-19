@@ -1,11 +1,11 @@
 {
 	"keycloak": {
-		"serverUrl": "http://keycloak:8080/auth",
-		"adminUser": "<KEYCLOAK_USER>",
-		"adminPassword": "<KEYCLOAK_PASSWORD>",
+		"serverUrl": "http://localhost:55095/auth",
+		"adminUser": "admin",
+		"adminPassword": "admin",
 		"adminClientId": "admin-cli",
 		"realms": {
-			"<KEYCLOAK_REALM>": {
+			"test2": {
 				"enabled": true,
 				"clientScopes": {
 					"fhirUser": {
@@ -533,57 +533,51 @@
 						]
 					}
 				},
-				"identityProviders": {
-					"idp": {
-						"providerId": "oidc",
-						"displayName": "Identity Provider",
-						"enabled": true,
-						"firstBrokerLoginFlowAlias": "first broker login",
-						"config": {
-							"userInfoUrl": "<IDENTITY_PROVIDER_USERINFO_URL>",
-							"validateSignature": "true",
-							"clientId": "<IDENTITY_PROVIDER_CLIENT_ID>",
-							"tokenUrl": "<IDENTITY_PROVIDER_TOKEN_URL>",
-							"jwksUrl": "<IDENTITY_PROVIDER_JWKS_URL>",
-							"issuer": "<IDENTITY_PROVIDER_ISSUER>",
-							"useJwksUrl": "true",
-							"authorizationUrl": "<IDENTITY_PROVIDER_AUTH_URL>",
-							"clientAuthMethod": "client_secret_basic",
-							"syncMode": "FORCE",
-							"clientSecret": "<IDENTITY_PROVIDER_CLIENT_SECRET>",
-							"prompt": "consent"
-						},
-						"mappers": {
-							"Import userId": {
-								"identityProviderMapper": "oidc-user-attribute-idp-mapper",
-								"config": {
-									"syncMode": "INHERIT",
-									"claim": "sub",
-									"user.attribute": "userId"
-								}
-							},
-							"Import resourceId": {
-								"identityProviderMapper": "oidc-user-attribute-idp-mapper",
-								"config": {
-									"syncMode": "INHERIT",
-									"claim": "<IDENTITY_PROVIDER_RESOURCEID_CLAIM>",
-									"user.attribute": "resourceId"
-								}
-							}
-						}
-					}
-				},
 				"authenticationFlows": {
-					"browser": {
-						"identityProviderRedirector": {
-							"alias": "idp",
-							"requirement": "ALTERNATIVE",
-							"config": {
-								"defaultProvider": "idp"
+					"SMART App Launch": {
+						"description": "browser based authentication",
+						"providerId": "basic-flow",
+						"builtIn": false,
+						"authenticationExecutions": {
+							"SMART Login": {
+								"requirement": "ALTERNATIVE",
+								"userSetupAllowed": false,
+								"authenticatorFlow": true,
+								"description": "Username, password, otp and other auth forms.",
+								"providerId": "basic-flow",
+								"authenticationExecutions": {
+									"Audience Validation": {
+										"authenticator": "audience-validator",
+										"requirement": "DISABLED",
+										"priority": 10,
+										"authenticatorFlow": false,
+										"configAlias": "localhost",
+										"config": {
+											"audiences": "https://localhost:9443/fhir-server/api/v4##http://host.docker.internal:9080/fhir-server/api/v4"
+										}
+									},
+									"Username Password Form": {
+										"authenticator": "auth-username-password-form", 
+										"requirement": "REQUIRED",
+										"priority": 20,
+										"authenticatorFlow": false
+									},
+									"Patient Selection Authenticator": {
+										"authenticator": "auth-select-patient",
+										"requirement": "REQUIRED",
+										"priority": 30,
+										"authenticatorFlow": false,
+										"configAlias": "host.docker",
+										"config": {
+											"internalFhirUrl": "http://host.docker.internal:9080/fhir-server/api/v4"
+										}
+									}
+								}
 							}
 						}
 					}
 				},
+				"browserFlow": "SMART App Launch",
 				"groups": {
 					"fhirUser": {
 					}

@@ -65,6 +65,7 @@ public class KeycloakConfig {
     public static final String PROP_CLIENT_ADMIN_URL = "adminURL";
     public static final String PROP_CLIENT_WEB_ORIGINS = "webOrigins";
     public static final String PROP_AUTHENTICATION_FLOWS = "authenticationFlows";
+    public static final String PROP_BROWSER_FLOW = "browserFlow";
     public static final String PROP_IDENTITY_REDIRECTOR = "identityProviderRedirector";
     public static final String PROP_IDENTITY_PROVIDER_REDIRECTOR_ALIAS = "alias";
     public static final String PROP_IDENTITY_PROVIDER_REDIRECTOR_REQUIREMENT = "requirement";
