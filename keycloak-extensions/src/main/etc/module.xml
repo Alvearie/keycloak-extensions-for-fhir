@@ -1,10 +1,10 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <module xmlns="urn:jboss:module:1.5" name="com.ibm.fhir">
   <resources>
-    <resource-root path="fhir-provider-4.7.0-SNAPSHOT.jar"/>
-    <resource-root path="fhir-config-4.7.0-SNAPSHOT.jar"/>
-    <resource-root path="fhir-model-4.7.0-SNAPSHOT.jar"/>
-    <resource-root path="fhir-core-4.7.0-SNAPSHOT.jar"/>
+    <resource-root path="fhir-provider-4.7.1.jar"/>
+    <resource-root path="fhir-config-4.7.1.jar"/>
+    <resource-root path="fhir-model-4.7.1.jar"/>
+    <resource-root path="fhir-core-4.7.1.jar"/>
     <resource-root path="antlr4-runtime-4.9.1.jar"/>
     <resource-root path="commons-io-2.4.jar"/>
     <resource-root path="commons-lang3-3.4.jar"/>

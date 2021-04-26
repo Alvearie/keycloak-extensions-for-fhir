@@ -11,8 +11,8 @@
 
   <properties>
     <keycloak.version>12.0.4</keycloak.version>
-    <testcontainers.version>1.15.1</testcontainers.version>
-    <ibm-fhir-server.version>4.7.0</ibm-fhir-server.version>
+    <testcontainers-keycloak.version>1.6.1</testcontainers-keycloak.version>
+    <ibm-fhir-server.version>4.7.1</ibm-fhir-server.version>
     <maven.compiler.target>1.8</maven.compiler.target>
     <maven.compiler.source>1.8</maven.compiler.source>
   </properties>
@@ -86,15 +86,9 @@
         <scope>test</scope>
       </dependency>
       <dependency>
-        <groupId>org.testcontainers</groupId>
-        <artifactId>testcontainers</artifactId>
-        <version>${testcontainers.version}</version>
-        <scope>test</scope>
-      </dependency>
-      <dependency>
         <groupId>com.github.dasniko</groupId>
         <artifactId>testcontainers-keycloak</artifactId>
-        <version>1.6.0</version>
+        <version>${testcontainers-keycloak.version}</version>
         <scope>test</scope>
       </dependency>
       <dependency>

@@ -116,38 +116,40 @@ public class PatientSelectionForm implements Authenticator {
         String accessToken = buildInternalAccessToken(context, resourceIds);
 
         Bundle requestBundle = buildRequestBundle(resourceIds);
-        Response fhirResponse = fhirClient.target(config.getConfig().get(PatientSelectionFormFactory.INTERNAL_FHIR_URL_PROP_NAME))
+        try (Response fhirResponse = fhirClient
+                .target(config.getConfig().get(PatientSelectionFormFactory.INTERNAL_FHIR_URL_PROP_NAME))
                 .request(MediaType.APPLICATION_JSON)
                 .header(HttpHeaderNames.AUTHORIZATION, "Bearer " + accessToken)
-                .post(Entity.entity(requestBundle, FHIRMediaType.APPLICATION_FHIR_JSON_TYPE));
+                .post(Entity.entity(requestBundle, FHIRMediaType.APPLICATION_FHIR_JSON_TYPE))) {
 
-        if (fhirResponse.getStatus() != 200) {
-            String msg = "Error while retrieving Patient resources for the selection form";
-            LOG.warnf(msg);
-            LOG.warnf("Response with code " + fhirResponse.getStatus() + "%n%s", fhirResponse.readEntity(String.class));
-            context.failure(AuthenticationFlowError.INTERNAL_ERROR,
-                    Response.status(302)
-                    .header("Location", context.getAuthenticationSession().getRedirectUri() +
-                            "?error=server_error" +
-                            "&error_description=" + msg)
-                    .build());
-            return;
-        }
+            if (fhirResponse.getStatus() != 200) {
+                String msg = "Error while retrieving Patient resources for the selection form";
+                LOG.warnf(msg);
+                LOG.warnf("Response with code " + fhirResponse.getStatus() + "%n%s", fhirResponse.readEntity(String.class));
+                context.failure(AuthenticationFlowError.INTERNAL_ERROR,
+                        Response.status(302)
+                        .header("Location", context.getAuthenticationSession().getRedirectUri() +
+                                "?error=server_error" +
+                                "&error_description=" + msg)
+                        .build());
+                return;
+            }
 
-        List<PatientStruct> patients = gatherPatientInfo(fhirResponse.readEntity(Bundle.class));
-        if (patients.isEmpty()) {
-            succeed(context, resourceIds.get(0));
-            return;
-        }
+            List<PatientStruct> patients = gatherPatientInfo(fhirResponse.readEntity(Bundle.class));
+            if (patients.isEmpty()) {
+                succeed(context, resourceIds.get(0));
+                return;
+            }
 
-        if (patients.size() == 1) {
-            succeed(context, patients.get(0).getId());
-        } else {
-            Response response = context.form()
-                    .setAttribute("patients", patients)
-                    .createForm("patient-select-form.ftl");
+            if (patients.size() == 1) {
+                succeed(context, patients.get(0).getId());
+            } else {
+                Response response = context.form()
+                        .setAttribute("patients", patients)
+                        .createForm("patient-select-form.ftl");
 
-            context.challenge(response);
+                context.challenge(response);
+            }
         }
     }
 
