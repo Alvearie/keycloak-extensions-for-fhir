@@ -9,8 +9,10 @@ import static org.hamcrest.Matchers.notNullValue;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThat;
 
+import java.io.IOException;
 import java.net.HttpURLConnection;
 import java.net.URL;
+import java.nio.charset.Charset;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -18,6 +20,7 @@ import javax.ws.rs.core.Response;
 
 import org.alvearie.keycloak.config.KeycloakConfigurator;
 import org.alvearie.keycloak.config.util.KeycloakConfig;
+import org.apache.commons.io.IOUtils;
 import org.jsmart.zerocode.core.httpclient.BasicHttpClient;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
@@ -25,9 +28,12 @@ import org.junit.Test;
 import org.keycloak.admin.client.Keycloak;
 import org.keycloak.admin.client.KeycloakBuilder;
 import org.keycloak.representations.info.ServerInfoRepresentation;
+import org.mockito.Mockito;
 import org.testcontainers.containers.BindMode;
 
 import dasniko.testcontainers.keycloak.KeycloakContainer;
+import okhttp3.mockwebserver.MockResponse;
+import okhttp3.mockwebserver.MockWebServer;
 
 public class KeycloakContainerTest {
     private static final String MASTER_REALM = "master";
@@ -48,9 +54,10 @@ public class KeycloakContainerTest {
     }
 
     private static Keycloak adminClient;
+    private static MockWebServer mockFhirServer;
 
     @BeforeClass
-    public static void start() throws Exception {
+    public static void setUp() throws Exception {
         adminClient = KeycloakBuilder.builder()
                 .serverUrl(keycloak.getAuthServerUrl())
                 .realm(MASTER_REALM)
@@ -59,13 +66,31 @@ public class KeycloakContainerTest {
                 .clientId(CLIENT_ID)
                 .build();
         KeycloakConfigurator configurator = new KeycloakConfigurator(adminClient);
+
+        mockFhirServer = new MockWebServer();
+        mockFhirServer.enqueue(new MockResponse()
+                .setHeader("Content-Type", "application/fhir+json")
+                .setBody(IOUtils.resourceToString("/mock_fhir_response.json", Charset.forName("UTF-8")))
+                );
+        mockFhirServer.start();
+        setupFHIRPortEnvVar(mockFhirServer.getPort());
+
         KeycloakConfig config = new KeycloakConfig("keycloak-config.json");
         configurator.initializeRealm("test", config.getPropertyGroup("test"));
     }
 
+    private static void setupFHIRPortEnvVar(int port) {
+        Map<String,String> env = new HashMap<>(KeycloakConfig.EnvironmentVariables.get());
+        env.put("FHIR_PORT", Integer.toString(port));
+        Mockito.mockStatic(KeycloakConfig.EnvironmentVariables.class);
+        Mockito.when(KeycloakConfig.EnvironmentVariables.get()).thenReturn(env);
+    }
+
     @AfterClass
-    public static void end() {
-        // no cleanup to enable re-use of the container
+    public static void tearDown() throws IOException {
+        mockFhirServer.shutdown();
+
+        // no container cleanup to enable re-use
         //keycloak.close();
     }
 
@@ -73,6 +98,15 @@ public class KeycloakContainerTest {
     public void shouldReturnServerInfo() {
         ServerInfoRepresentation serverInfo = adminClient.serverInfo().getInfo();
         assertThat(serverInfo, notNullValue());
+    }
+
+    @Test
+    public void testMockFhirServer() throws Exception {
+        URL url = new URL("http://localhost:" + mockFhirServer.getPort() + "/auth");
+        HttpURLConnection connection = (HttpURLConnection) url.openConnection();
+        connection.setRequestMethod("GET");
+        assertEquals(connection.getResponseCode(), 200);
+        IOUtils.copy(connection.getInputStream(), System.out);
     }
 
     @Test

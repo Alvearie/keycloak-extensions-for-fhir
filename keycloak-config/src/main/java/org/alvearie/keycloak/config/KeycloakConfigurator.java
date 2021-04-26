@@ -550,20 +550,6 @@ public class KeycloakConfigurator {
             authenticationFlow.setProviderId(authenticationFlowPg.getStringProperty("providerId"));
             authenticationFlow.setBuiltIn(authenticationFlowPg.getBooleanProperty("builtIn"));
 
-//          "description": "browser based authentication",
-//          "providerId": "basic-flow",
-//          "topLevel": true,
-//          "builtIn": false,
-//          "authenticationExecutions": [
-//              {
-//                  "requirement": "ALTERNATIVE",
-//                  "priority": 30,
-//                  "flowAlias": "SMART App Launch forms",
-//                  "userSetupAllowed": false,
-//                  "autheticatorFlow": true
-//              }
-//          ]
-
             Response response = authMgmt.createFlow(authenticationFlow);
 
             if (response.getStatusInfo().getFamily() == Family.SUCCESSFUL) {

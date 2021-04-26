@@ -13,6 +13,7 @@ import org.alvearie.keycloak.config.KeycloakConfigurator;
 import org.alvearie.keycloak.config.util.KeycloakConfig;
 import org.keycloak.admin.client.Keycloak;
 import org.keycloak.admin.client.KeycloakBuilder;
+import org.testcontainers.containers.BindMode;
 
 import com.google.inject.Inject;
 import com.google.inject.name.Named;
@@ -56,10 +57,11 @@ public class TestHelper {
         // Object to store/return properties needed for the down the line tests
         // spin up and start the keycloak container
         keycloak = new KeycloakContainer().withExtensionClassesFrom("target/classes");
-
+        keycloak.addFileSystemBind("target/dependency", "/opt/jboss/keycloak/modules/system/layers/base/com/ibm/fhir/main", BindMode.READ_ONLY);
         // Shouldn't be needed, but is:
         // https://github.com/dasniko/testcontainers-keycloak/issues/15
         keycloak.withEnv("DB_VENDOR", db_vendor);
+        keycloak.withReuse(true);
         keycloak.start();
         adminClient = KeycloakBuilder.builder()
                 .serverUrl(keycloak.getAuthServerUrl())
@@ -88,7 +90,7 @@ public class TestHelper {
 
     public Map<String, Object> stopKeycloakContainer() {
         // stopping the keycloak container
-        keycloak.close();
+//        keycloak.close();
         // build the variables needed to return
         keycloakprops.clear();
         keycloakprops.put("runningStatus", Boolean.toString(keycloak.isRunning()));

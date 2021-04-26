@@ -93,7 +93,7 @@
 								"authenticatorFlow": false,
 								"configAlias": "host.docker",
 								"config": {
-									"internalFhirUrl": "http://host.docker.internal:9080/fhir-server/api/v4"
+									"internalFhirUrl": "http://host.docker.internal:${FHIR_PORT}/fhir-server/api/v4"
 								}
 							}
 						}
