@@ -47,7 +47,7 @@
 						"protocolmapper": "oidc-usersessionmodel-note-mapper",
 						"config": {
 							"user.session.note": "patient_id",
-							"claim.name": "patient_id",
+							"claim.name": "patient",
 							"jsonType.label": "String",
 							"id.token.claim": "false",
 							"access.token.claim": "false",
