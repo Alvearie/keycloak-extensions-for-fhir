@@ -20,6 +20,7 @@
   <modules>
     <module>keycloak-config</module>
     <module>keycloak-extensions</module>
+    <module>jboss-fhir-provider</module>
   </modules>
 
   <dependencyManagement>

@@ -10,5 +10,5 @@ FROM quay.io/keycloak/keycloak:12.0.4
 ENV DB_VENDOR=H2
 
 COPY keycloak-extensions/target/keycloak-extensions-*.jar /opt/jboss/keycloak/standalone/deployments/
-COPY jboss-fhir/target/jboss-modules/ /opt/jboss/keycloak/modules/system/layers/base/
+COPY jboss-fhir-provider/target/jboss-modules/ /opt/jboss/keycloak/modules/system/layers/base/
 RUN rm -rf /opt/jboss/keycloak/docs

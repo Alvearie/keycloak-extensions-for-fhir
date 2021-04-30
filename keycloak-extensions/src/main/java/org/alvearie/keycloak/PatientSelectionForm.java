@@ -67,6 +67,8 @@ public class PatientSelectionForm implements Authenticator {
     private static final String SMART_SCOPE_PATIENT_READ = "patient/Patient.read";
     private static final String SMART_SCOPE_LAUNCH_PATIENT = "launch/patient";
 
+    private static final String ATTRIBUTE_RESOURCE_ID = "resourceId";
+
     private Client fhirClient;
 
     public PatientSelectionForm() {
@@ -93,7 +95,7 @@ public class PatientSelectionForm implements Authenticator {
             return;
         }
 
-        List<String> resourceIds = context.getUser().getAttributeStream("resourceId")
+        List<String> resourceIds = context.getUser().getAttributeStream(ATTRIBUTE_RESOURCE_ID)
                 .flatMap(a -> Arrays.stream(a.split(" ")))
                 .map(String::trim)
                 .filter(s -> !s.isEmpty())

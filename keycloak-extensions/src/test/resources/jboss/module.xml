@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <module xmlns="urn:jboss:module:1.5" name="com.ibm.fhir">
+  <!-- This module file is only used for testing; the real com.ibm.fhir module will come from jboss-fhir-provider -->
   <resources>
     <resource-root path="fhir-provider-4.7.1.jar"/>
     <resource-root path="fhir-config-4.7.1.jar"/>

@@ -17,10 +17,12 @@
     <dependency>
       <groupId>com.ibm.fhir</groupId>
       <artifactId>fhir-provider</artifactId>
+      <scope>provided</scope>
     </dependency>
     <dependency>
       <groupId>com.ibm.fhir</groupId>
       <artifactId>fhir-model</artifactId>
+      <scope>provided</scope>
     </dependency>
     <dependency>
       <groupId>org.keycloak</groupId>
@@ -98,14 +100,10 @@
               <goal>copy-dependencies</goal>
             </goals>
             <configuration>
-              <artifactItems>
-                <artifactItem>
-                  <groupId>com.ibm.fhir</groupId>
-                  <artifactId>fhir-provider</artifactId>
-                  <version>4.7.0-SNAPSHOT</version>
-                </artifactItem>
-              </artifactItems>
-              <includeScope>runtime</includeScope>
+              <includeArtifactIds>
+                fhir-provider,fhir-config,fhir-model,fhir-core,antlr4-runtime,commons-io,commons-lang3,commons-text,encoder,jakarta.annotation-api,jakarta.json,jcip-annotations
+              </includeArtifactIds>
+              <includeScope>compile</includeScope>
             </configuration>
           </execution>
         </executions>
@@ -124,62 +122,13 @@
               <outputDirectory>${project.build.directory}/dependency</outputDirectory>
               <resources>
                 <resource>
-                  <directory>src/main/etc</directory>
+                  <directory>src/test/resources/jboss</directory>
                 </resource>
               </resources>
             </configuration>
           </execution>
         </executions>
       </plugin>
-      <plugin>
-        <artifactId>maven-resources-plugin</artifactId>
-        <version>3.2.0</version>
-        <executions>
-          <execution>
-            <id>copy-resources</id>
-            <phase>compile</phase>
-            <goals>
-              <goal>copy-resources</goal>
-            </goals>
-            <configuration>
-              <outputDirectory>${project.build.directory}/dependency</outputDirectory>
-              <resources>
-                <resource>
-                  <directory>src/main/etc</directory>
-                </resource>
-              </resources>
-            </configuration>
-          </execution>
-        </executions>
-      </plugin>
-      <!-- <plugin>
-        <groupId>org.apache.maven.plugins</groupId>
-        <artifactId>maven-shade-plugin</artifactId>
-        <executions>
-          <execution>
-            <phase>package</phase>
-            <goals>
-              <goal>shade</goal>
-            </goals>
-            <configuration>
-              <filters>
-                <filter>
-                  <artifact>*:*</artifact>
-                  <excludes>
-                    <exclude>META-INF/*.SF</exclude>
-                    <exclude>META-INF/*.DSA</exclude>
-                    <exclude>META-INF/*.RSA</exclude>
-                  </excludes>
-                </filter>
-              </filters>
-              <manifest>
-                <addClasspath>true</addClasspath>
-                <classpathPrefix>lib/</classpathPrefix>
-              </manifest>
-            </configuration>
-          </execution>
-        </executions>
-      </plugin> -->
     </plugins>
   </build>
 </project>

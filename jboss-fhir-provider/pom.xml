@@ -7,7 +7,7 @@
     <artifactId>keycloak-extensions-parent</artifactId>
     <version>0.0.1-SNAPSHOT</version>
   </parent>
-  <artifactId>jboss-fhir</artifactId>
+  <artifactId>jboss-fhir-provider</artifactId>
   <packaging>jar</packaging>
 
   <dependencies>
@@ -15,30 +15,10 @@
       <groupId>com.ibm.fhir</groupId>
       <artifactId>fhir-provider</artifactId>
     </dependency>
-    <dependency>
-      <groupId>com.ibm.fhir</groupId>
-      <artifactId>fhir-model</artifactId>
-    </dependency>
   </dependencies>
-  
+
   <build>
     <plugins>
-      <!-- <plugin>
-        <groupId>com.codenuity.jboss</groupId>
-        <artifactId>jboss-modules-builder</artifactId>
-        <version>1.1</version>
-        <executions>
-          <execution>
-            <id>build-modules</id>
-            <goals>
-              <goal>build</goal>
-            </goals>
-            <configuration>
-              <modulesYamlFile>${project.basedir}/src/main/resources/module.yaml</modulesYamlFile>
-            </configuration>
-          </execution>
-        </executions>
-      </plugin> -->
       <plugin>
         <groupId>de.smartics.maven.plugin</groupId>
         <artifactId>smartics-jboss-modules-maven-plugin</artifactId>
