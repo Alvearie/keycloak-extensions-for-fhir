@@ -1,6 +1,6 @@
 {
 	"keycloak": {
-		"serverUrl": "${KEYCLOAK_BASE_URL}",
+		"serverUrl": "http://keycloak:8080/auth",
 		"adminUser": "${KEYCLOAK_USER}",
 		"adminPassword": "${KEYCLOAK_PASSWORD}",
 		"adminClientId": "admin-cli",
@@ -31,33 +31,21 @@
 					},
 					"launch/patient": {
 						"protocol": "openid-connect",
-						"description": "Used by clients to request a patient-scoped access token",
+						"description": "Used by clients to request patient scope",
 						"attributes": {
 							"display.on.consent.screen": "false"
 						},
 						"mappers": {
-							"Patient ID Claim Mapper": {
+							"Patient ID Mapper": {
 								"protocol": "openid-connect",
 								"protocolmapper": "oidc-usermodel-attribute-mapper",
 								"config": {
 									"user.attribute": "resourceId",
-									"claim.name": "patient_id",
 									"jsonType.label": "String",
+									"claim.name": "patient_id",
 									"id.token.claim": "false",
 									"access.token.claim": "true",
 									"userinfo.token.claim": "false"
-								}
-							},
-							"Patient ID Token Mapper": {
-								"protocol": "openid-connect",
-								"protocolmapper": "oidc-usersessionmodel-note-mapper",
-								"config": {
-									"user.session.note": "patient_id",
-									"claim.name": "patient",
-									"jsonType.label": "String",
-									"id.token.claim": "false",
-									"access.token.claim": "false",
-									"access.tokenResponse.claim": "true"
 								}
 							},
 							"Group Membership Mapper": {
@@ -545,68 +533,62 @@
 						]
 					}
 				},
-				"authenticationFlows": {
-					"SMART App Launch": {
-						"description": "browser based authentication",
-						"providerId": "basic-flow",
-						"builtIn": false,
-						"authenticationExecutions": {
-							"SMART Login": {
-								"requirement": "ALTERNATIVE",
-								"userSetupAllowed": false,
-								"authenticatorFlow": true,
-								"description": "Username, password, otp and other auth forms.",
-								"providerId": "basic-flow",
-								"authenticationExecutions": {
-									"Audience Validation": {
-										"authenticator": "audience-validator",
-										"requirement": "DISABLED",
-										"priority": 10,
-										"authenticatorFlow": false,
-										"configAlias": "localhost",
-										"config": {
-											"audiences": "${FHIR_BASE_URL}"
-										}
-									},
-									"Username Password Form": {
-										"authenticator": "auth-username-password-form", 
-										"requirement": "REQUIRED",
-										"priority": 20,
-										"authenticatorFlow": false
-									},
-									"Patient Selection Authenticator": {
-										"authenticator": "auth-select-patient",
-										"requirement": "REQUIRED",
-										"priority": 30,
-										"authenticatorFlow": false,
-										"configAlias": "host.docker",
-										"config": {
-											"internalFhirUrl": "${FHIR_BASE_URL}"
-										}
-									}
+				"identityProviders": {
+					"idp": {
+						"providerId": "oidc",
+						"displayName": "Identity Provider",
+						"enabled": true,
+						"firstBrokerLoginFlowAlias": "first broker login",
+						"config": {
+							"userInfoUrl": "${IDENTITY_PROVIDER_USERINFO_URL}",
+							"validateSignature": "true",
+							"clientId": "${IDENTITY_PROVIDER_CLIENT_ID}",
+							"tokenUrl": "${IDENTITY_PROVIDER_TOKEN_URL}",
+							"jwksUrl": "${IDENTITY_PROVIDER_JWKS_URL}",
+							"issuer": "${IDENTITY_PROVIDER_ISSUER}",
+							"useJwksUrl": "true",
+							"authorizationUrl": "${IDENTITY_PROVIDER_AUTH_URL}",
+							"clientAuthMethod": "client_secret_basic",
+							"syncMode": "FORCE",
+							"clientSecret": "${IDENTITY_PROVIDER_CLIENT_SECRET}",
+							"prompt": "consent"
+						},
+						"mappers": {
+							"Import userId": {
+								"identityProviderMapper": "oidc-user-attribute-idp-mapper",
+								"config": {
+									"syncMode": "INHERIT",
+									"claim": "sub",
+									"user.attribute": "userId"
+								}
+							},
+							"Import resourceId": {
+								"identityProviderMapper": "oidc-user-attribute-idp-mapper",
+								"config": {
+									"syncMode": "INHERIT",
+									"claim": "${IDENTITY_PROVIDER_RESOURCEID_CLAIM}",
+									"user.attribute": "resourceId"
 								}
 							}
 						}
 					}
 				},
-				"browserFlow": "SMART App Launch",
+				"authenticationFlows": {
+					"browser": {
+						"identityProviderRedirector": {
+							"alias": "idp",
+							"requirement": "ALTERNATIVE",
+							"config": {
+								"defaultProvider": "idp"
+							}
+						}
+					}
+				},
 				"groups": {
 					"fhirUser": {
 					}
 				},
 				"defaultGroups": ["fhirUser"],
-				"users": {
-					"fhiruser": {
-						"enabled": true,
-						"password": "change-password",
-						"passwordTemporary": false,
-						"attributes": {
-							"resourceId": ["Patient0000"],
-							"dsid": ["<FHIR_DSID>"]
-						},
-						"groups": ["fhirUser"]
-					}
-				},
 				"eventsConfig": {
 					"saveLoginEvents": true,
 					"expiration": 23328000,

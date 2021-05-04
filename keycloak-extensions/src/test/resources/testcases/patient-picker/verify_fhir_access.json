@@ -1,0 +1,36 @@
+{
+	"scenarioName": "GIVEN - I request authcode from keycloak, THEN - I verify FHIR server is responding for both patient access and provider directory",
+	"ignoreStepFailures" : "true",
+	"steps": [
+		{
+			"id": "reuse_get_oauth_token",
+			"stepFiles": "${JSON.FILE:commonsteps/get_keycloak_oauth_token.json}"
+		},
+		{
+			"name": "verify_Patient?_id=${fhir.patient.id}_fhir_endpoint",
+			"url": "${fhir.server.url}/Patient?_id=${fhir.patient.id}",
+			"method": "GET",
+			"request": {
+				"headers": {
+					"Authorization": "Bearer ${$.get_oauth_token.response.access_token}"
+				}
+			},
+			"verify": {
+				"status": 200
+			}
+		},
+		{
+			"name": "verify_Patient/invalid_fhir_endpoint",
+			"url": "${fhir.server.url}/Patient/invalid",
+			"method": "GET",
+			"request": {
+				"headers": {
+					"Authorization": "Bearer ${$.get_oauth_token.response.access_token}"
+				}
+			},
+			"verify": {
+				"status": 403
+			}
+		}
+	]
+}

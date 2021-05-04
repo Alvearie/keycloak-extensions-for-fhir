@@ -1,0 +1,10 @@
+{
+	"name": "get_oauth_token",
+	"url": "com.ibm.interop.fvt.oauth.SeleniumOauthInteraction",
+	"method": "fetchToken",
+	"request": "",
+	"verify": {
+		"token_type": "bearer",
+		"access_token": "$NOT.NULL"
+	}
+}

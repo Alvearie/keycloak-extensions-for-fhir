@@ -10,13 +10,19 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.StringReader;
+import java.nio.charset.StandardCharsets;
 import java.util.List;
+import java.util.Map;
 
 import javax.json.Json;
 import javax.json.JsonObject;
 import javax.json.JsonReader;
 import javax.json.JsonReaderFactory;
 import javax.json.JsonValue;
+
+import org.apache.commons.io.IOUtils;
+import org.apache.commons.text.StringSubstitutor;
 
 /**
  * This class contains the Keycloak configuration.
@@ -65,6 +71,7 @@ public class KeycloakConfig {
     public static final String PROP_CLIENT_ADMIN_URL = "adminURL";
     public static final String PROP_CLIENT_WEB_ORIGINS = "webOrigins";
     public static final String PROP_AUTHENTICATION_FLOWS = "authenticationFlows";
+    public static final String PROP_BROWSER_FLOW = "browserFlow";
     public static final String PROP_IDENTITY_REDIRECTOR = "identityProviderRedirector";
     public static final String PROP_IDENTITY_PROVIDER_REDIRECTOR_ALIAS = "alias";
     public static final String PROP_IDENTITY_PROVIDER_REDIRECTOR_REQUIREMENT = "requirement";
@@ -196,7 +203,9 @@ public class KeycloakConfig {
     private PropertyGroup loadConfiguration() {
         if (config == null) {
             try (InputStream is = resolveFile(fileName)) {
-                try (JsonReader reader = JSON_READER_FACTORY.createReader(is)) {
+                String templatedJson = IOUtils.toString(is, StandardCharsets.UTF_8);
+                String resolvedJson = StringSubstitutor.replace(templatedJson, EnvironmentVariables.get());
+                try (JsonReader reader = JSON_READER_FACTORY.createReader(new StringReader(resolvedJson))) {
                     JsonObject jsonObj = reader.readObject();
                     reader.close();
                     config = new PropertyGroup(jsonObj);
@@ -294,5 +303,21 @@ public class KeycloakConfig {
         }
 
         return (result != null ? result : defaultValue);
+    }
+
+    /**
+     * Utility class that allows mocking system environment variables retrieval in test classes (as Mockito disallows
+     * mocking static methods of {@link System}).
+     */
+    public static class EnvironmentVariables {
+        /**
+         * Simple proxy method for {@link System#getenv()} that returns an unmodifiable string map view of the current
+         * system environment.
+         *
+         * @return the environment as a map of variable names to values
+         */
+        public static Map<String,String> get() {
+            return System.getenv();
+        }
     }
 }

@@ -1,11 +1,11 @@
 {
 	"keycloak": {
-		"serverUrl": "${KEYCLOAK_BASE_URL}",
-		"adminUser": "${KEYCLOAK_USER}",
-		"adminPassword": "${KEYCLOAK_PASSWORD}",
+		"serverUrl": "http://localhost:55095/auth",
+		"adminUser": "admin",
+		"adminPassword": "admin",
 		"adminClientId": "admin-cli",
 		"realms": {
-			"${KEYCLOAK_REALM}": {
+			"test2": {
 				"enabled": true,
 				"clientScopes": {
 					"fhirUser": {
@@ -31,33 +31,21 @@
 					},
 					"launch/patient": {
 						"protocol": "openid-connect",
-						"description": "Used by clients to request a patient-scoped access token",
+						"description": "Used by clients to request patient scope",
 						"attributes": {
 							"display.on.consent.screen": "false"
 						},
 						"mappers": {
-							"Patient ID Claim Mapper": {
+							"Patient ID Mapper": {
 								"protocol": "openid-connect",
 								"protocolmapper": "oidc-usermodel-attribute-mapper",
 								"config": {
 									"user.attribute": "resourceId",
-									"claim.name": "patient_id",
 									"jsonType.label": "String",
+									"claim.name": "patient_id",
 									"id.token.claim": "false",
 									"access.token.claim": "true",
 									"userinfo.token.claim": "false"
-								}
-							},
-							"Patient ID Token Mapper": {
-								"protocol": "openid-connect",
-								"protocolmapper": "oidc-usersessionmodel-note-mapper",
-								"config": {
-									"user.session.note": "patient_id",
-									"claim.name": "patient",
-									"jsonType.label": "String",
-									"id.token.claim": "false",
-									"access.token.claim": "false",
-									"access.tokenResponse.claim": "true"
 								}
 							},
 							"Group Membership Mapper": {
@@ -91,7 +79,7 @@
 								"protocol": "openid-connect",
 								"protocolmapper": "oidc-audience-mapper",
 								"config": {
-									"included.custom.audience": "${FHIR_BASE_URL}",
+									"included.custom.audience": "<FHIR_BASE_URL>",
 									"access.token.claim": "true"
 								}
 							}
@@ -108,7 +96,7 @@
 								"protocol": "openid-connect",
 								"protocolmapper": "oidc-audience-mapper",
 								"config": {
-									"included.custom.audience": "${FHIR_BASE_URL}",
+									"included.custom.audience": "<FHIR_BASE_URL>",
 									"access.token.claim": "true"
 								}
 							}
@@ -125,7 +113,7 @@
 								"protocol": "openid-connect",
 								"protocolmapper": "oidc-audience-mapper",
 								"config": {
-									"included.custom.audience": "${FHIR_BASE_URL}",
+									"included.custom.audience": "<FHIR_BASE_URL>",
 									"access.token.claim": "true"
 								}
 							}
@@ -142,7 +130,7 @@
 								"protocol": "openid-connect",
 								"protocolmapper": "oidc-audience-mapper",
 								"config": {
-									"included.custom.audience": "${FHIR_BASE_URL}",
+									"included.custom.audience": "<FHIR_BASE_URL>",
 									"access.token.claim": "true"
 								}
 							}
@@ -159,7 +147,7 @@
 								"protocol": "openid-connect",
 								"protocolmapper": "oidc-audience-mapper",
 								"config": {
-									"included.custom.audience": "${FHIR_BASE_URL}",
+									"included.custom.audience": "<FHIR_BASE_URL>",
 									"access.token.claim": "true"
 								}
 							}
@@ -176,7 +164,7 @@
 								"protocol": "openid-connect",
 								"protocolmapper": "oidc-audience-mapper",
 								"config": {
-									"included.custom.audience": "${FHIR_BASE_URL}",
+									"included.custom.audience": "<FHIR_BASE_URL>",
 									"access.token.claim": "true"
 								}
 							}
@@ -193,7 +181,7 @@
 								"protocol": "openid-connect",
 								"protocolmapper": "oidc-audience-mapper",
 								"config": {
-									"included.custom.audience": "${FHIR_BASE_URL}",
+									"included.custom.audience": "<FHIR_BASE_URL>",
 									"access.token.claim": "true"
 								}
 							}
@@ -210,7 +198,7 @@
 								"protocol": "openid-connect",
 								"protocolmapper": "oidc-audience-mapper",
 								"config": {
-									"included.custom.audience": "${FHIR_BASE_URL}",
+									"included.custom.audience": "<FHIR_BASE_URL>",
 									"access.token.claim": "true"
 								}
 							}
@@ -227,7 +215,7 @@
 								"protocol": "openid-connect",
 								"protocolmapper": "oidc-audience-mapper",
 								"config": {
-									"included.custom.audience": "${FHIR_BASE_URL}",
+									"included.custom.audience": "<FHIR_BASE_URL>",
 									"access.token.claim": "true"
 								}
 							}
@@ -244,7 +232,7 @@
 								"protocol": "openid-connect",
 								"protocolmapper": "oidc-audience-mapper",
 								"config": {
-									"included.custom.audience": "${FHIR_BASE_URL}",
+									"included.custom.audience": "<FHIR_BASE_URL>",
 									"access.token.claim": "true"
 								}
 							}
@@ -261,7 +249,7 @@
 								"protocol": "openid-connect",
 								"protocolmapper": "oidc-audience-mapper",
 								"config": {
-									"included.custom.audience": "${FHIR_BASE_URL}",
+									"included.custom.audience": "<FHIR_BASE_URL>",
 									"access.token.claim": "true"
 								}
 							}
@@ -278,7 +266,7 @@
 								"protocol": "openid-connect",
 								"protocolmapper": "oidc-audience-mapper",
 								"config": {
-									"included.custom.audience": "${FHIR_BASE_URL}",
+									"included.custom.audience": "<FHIR_BASE_URL>",
 									"access.token.claim": "true"
 								}
 							}
@@ -295,7 +283,7 @@
 								"protocol": "openid-connect",
 								"protocolmapper": "oidc-audience-mapper",
 								"config": {
-									"included.custom.audience": "${FHIR_BASE_URL}",
+									"included.custom.audience": "<FHIR_BASE_URL>",
 									"access.token.claim": "true"
 								}
 							}
@@ -312,7 +300,7 @@
 								"protocol": "openid-connect",
 								"protocolmapper": "oidc-audience-mapper",
 								"config": {
-									"included.custom.audience": "${FHIR_BASE_URL}",
+									"included.custom.audience": "<FHIR_BASE_URL>",
 									"access.token.claim": "true"
 								}
 							}
@@ -329,7 +317,7 @@
 								"protocol": "openid-connect",
 								"protocolmapper": "oidc-audience-mapper",
 								"config": {
-									"included.custom.audience": "${FHIR_BASE_URL}",
+									"included.custom.audience": "<FHIR_BASE_URL>",
 									"access.token.claim": "true"
 								}
 							}
@@ -346,7 +334,7 @@
 								"protocol": "openid-connect",
 								"protocolmapper": "oidc-audience-mapper",
 								"config": {
-									"included.custom.audience": "${FHIR_BASE_URL}",
+									"included.custom.audience": "<FHIR_BASE_URL>",
 									"access.token.claim": "true"
 								}
 							}
@@ -363,7 +351,7 @@
 								"protocol": "openid-connect",
 								"protocolmapper": "oidc-audience-mapper",
 								"config": {
-									"included.custom.audience": "${FHIR_BASE_URL}",
+									"included.custom.audience": "<FHIR_BASE_URL>",
 									"access.token.claim": "true"
 								}
 							}
@@ -380,7 +368,7 @@
 								"protocol": "openid-connect",
 								"protocolmapper": "oidc-audience-mapper",
 								"config": {
-									"included.custom.audience": "${FHIR_BASE_URL}",
+									"included.custom.audience": "<FHIR_BASE_URL>",
 									"access.token.claim": "true"
 								}
 							}
@@ -397,7 +385,7 @@
 								"protocol": "openid-connect",
 								"protocolmapper": "oidc-audience-mapper",
 								"config": {
-									"included.custom.audience": "${FHIR_BASE_URL}",
+									"included.custom.audience": "<FHIR_BASE_URL>",
 									"access.token.claim": "true"
 								}
 							}
@@ -414,7 +402,7 @@
 								"protocol": "openid-connect",
 								"protocolmapper": "oidc-audience-mapper",
 								"config": {
-									"included.custom.audience": "${FHIR_BASE_URL}",
+									"included.custom.audience": "<FHIR_BASE_URL>",
 									"access.token.claim": "true"
 								}
 							}
@@ -431,7 +419,7 @@
 								"protocol": "openid-connect",
 								"protocolmapper": "oidc-audience-mapper",
 								"config": {
-									"included.custom.audience": "${FHIR_BASE_URL}",
+									"included.custom.audience": "<FHIR_BASE_URL>",
 									"access.token.claim": "true"
 								}
 							}
@@ -448,7 +436,7 @@
 								"protocol": "openid-connect",
 								"protocolmapper": "oidc-audience-mapper",
 								"config": {
-									"included.custom.audience": "${FHIR_BASE_URL}",
+									"included.custom.audience": "<FHIR_BASE_URL>",
 									"access.token.claim": "true"
 								}
 							}
@@ -465,7 +453,7 @@
 								"protocol": "openid-connect",
 								"protocolmapper": "oidc-audience-mapper",
 								"config": {
-									"included.custom.audience": "${FHIR_BASE_URL}",
+									"included.custom.audience": "<FHIR_BASE_URL>",
 									"access.token.claim": "true"
 								}
 							}
@@ -565,7 +553,7 @@
 										"authenticatorFlow": false,
 										"configAlias": "localhost",
 										"config": {
-											"audiences": "${FHIR_BASE_URL}"
+											"audiences": "https://localhost:9443/fhir-server/api/v4##http://host.docker.internal:9080/fhir-server/api/v4"
 										}
 									},
 									"Username Password Form": {
@@ -581,7 +569,7 @@
 										"authenticatorFlow": false,
 										"configAlias": "host.docker",
 										"config": {
-											"internalFhirUrl": "${FHIR_BASE_URL}"
+											"internalFhirUrl": "http://host.docker.internal:9080/fhir-server/api/v4"
 										}
 									}
 								}
@@ -595,18 +583,6 @@
 					}
 				},
 				"defaultGroups": ["fhirUser"],
-				"users": {
-					"fhiruser": {
-						"enabled": true,
-						"password": "change-password",
-						"passwordTemporary": false,
-						"attributes": {
-							"resourceId": ["Patient0000"],
-							"dsid": ["<FHIR_DSID>"]
-						},
-						"groups": ["fhirUser"]
-					}
-				},
 				"eventsConfig": {
 					"saveLoginEvents": true,
 					"expiration": 23328000,

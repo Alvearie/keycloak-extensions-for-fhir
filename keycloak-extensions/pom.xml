@@ -12,6 +12,18 @@
 
   <dependencies>
 
+    <!-- The com.ibm.fhir dependencies go first to tightly control the versions
+         because we need to ensure they match the versions listed in module.xml -->
+    <dependency>
+      <groupId>com.ibm.fhir</groupId>
+      <artifactId>fhir-provider</artifactId>
+      <scope>provided</scope>
+    </dependency>
+    <dependency>
+      <groupId>com.ibm.fhir</groupId>
+      <artifactId>fhir-model</artifactId>
+      <scope>provided</scope>
+    </dependency>
     <dependency>
       <groupId>org.keycloak</groupId>
       <artifactId>keycloak-core</artifactId>
@@ -35,10 +47,6 @@
       <scope>test</scope>
     </dependency>
     <dependency>
-      <groupId>org.testcontainers</groupId>
-      <artifactId>testcontainers</artifactId>
-    </dependency>
-    <dependency>
       <groupId>com.github.dasniko</groupId>
       <artifactId>testcontainers-keycloak</artifactId>
     </dependency>
@@ -50,20 +58,77 @@
       <groupId>ch.qos.logback</groupId>
       <artifactId>logback-classic</artifactId>
     </dependency>
-	<dependency>
-	  <groupId>org.seleniumhq.selenium</groupId>
-	  <artifactId>selenium-java</artifactId>
-	</dependency>
     <dependency>
-	  <groupId>org.jsmart</groupId>
-	  <artifactId>zerocode-tdd</artifactId>
-	  <exclusions>
+      <groupId>org.mockito</groupId>
+      <artifactId>mockito-core</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.mockito</groupId>
+      <artifactId>mockito-inline</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.seleniumhq.selenium</groupId>
+      <artifactId>selenium-java</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.jsmart</groupId>
+      <artifactId>zerocode-tdd</artifactId>
+      <exclusions>
         <exclusion>
           <groupId>org.jboss.resteasy</groupId>
-    	  <artifactId>resteasy-jaxrs</artifactId>
+          <artifactId>resteasy-jaxrs</artifactId>
         </exclusion>
       </exclusions>
-	</dependency>
+    </dependency>
+    <dependency>
+      <groupId>com.squareup.okhttp3</groupId>
+      <artifactId>mockwebserver</artifactId>
+      <scope>test</scope>
+    </dependency>
   </dependencies>
 
+  <build>
+    <plugins>
+      <plugin>
+        <artifactId>maven-dependency-plugin</artifactId>
+        <version>3.1.2</version>
+        <executions>
+          <execution>
+            <id>copy-dependencies</id>
+            <phase>compile</phase>
+            <goals>
+              <goal>copy-dependencies</goal>
+            </goals>
+            <configuration>
+              <includeArtifactIds>
+                fhir-provider,fhir-config,fhir-model,fhir-core,antlr4-runtime,commons-io,commons-lang3,commons-text,encoder,jakarta.annotation-api,jakarta.json,jcip-annotations
+              </includeArtifactIds>
+              <includeScope>compile</includeScope>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
+      <plugin>
+        <artifactId>maven-resources-plugin</artifactId>
+        <version>3.2.0</version>
+        <executions>
+          <execution>
+            <id>copy-resources</id>
+            <phase>compile</phase>
+            <goals>
+              <goal>copy-resources</goal>
+            </goals>
+            <configuration>
+              <outputDirectory>${project.build.directory}/dependency</outputDirectory>
+              <resources>
+                <resource>
+                  <directory>src/test/resources/jboss</directory>
+                </resource>
+              </resources>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
+    </plugins>
+  </build>
 </project>

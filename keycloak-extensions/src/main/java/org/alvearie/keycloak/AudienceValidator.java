@@ -34,7 +34,7 @@ public class AudienceValidator implements Authenticator {
     public void authenticate(AuthenticationFlowContext context) {
 
         if (context.getAuthenticatorConfig() == null ||
-                !context.getAuthenticatorConfig().getConfig().containsKey(AudienceValidatorFactory.AUDIENCES)) {
+                !context.getAuthenticatorConfig().getConfig().containsKey(AudienceValidatorFactory.AUDIENCES_PROP_NAME)) {
             String msg = "The Keycloak Audience Validation Extension must be configured with one or more allowed audiences";
             context.failure(AuthenticationFlowError.CLIENT_CREDENTIALS_SETUP_REQUIRED,
                     Response.status(302)
@@ -46,7 +46,7 @@ public class AudienceValidator implements Authenticator {
         }
 
         String requestedAudience = context.getUriInfo().getQueryParameters().getFirst(SMART_AUDIENCE_PARAM);
-        String audiencesString = context.getAuthenticatorConfig().getConfig().get(AudienceValidatorFactory.AUDIENCES);
+        String audiencesString = context.getAuthenticatorConfig().getConfig().get(AudienceValidatorFactory.AUDIENCES_PROP_NAME);
         LOG.debugf("Requested audience: %s", requestedAudience);
         LOG.debugf("Allowed audiences: %s", audiencesString);
 

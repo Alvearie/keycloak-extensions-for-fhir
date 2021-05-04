@@ -17,19 +17,21 @@ import java.util.Collections;
 import java.util.List;
 
 /**
- * Factory for creating AudienceValidator instances.
+ * Factory for creating PatientSelectionForm instances.
  */
-public class AudienceValidatorFactory implements AuthenticatorFactory {
+public class PatientSelectionFormFactory implements AuthenticatorFactory {
 
-    private static final String PROVIDER_ID = "audience-validator";
+    private static final String PROVIDER_ID = "auth-select-patient";
 
-    static final String AUDIENCES_PROP_NAME = "audiences";
-    private static final String AUDIENCES_PROP_LABEL = "Allowed Audiences";
-    private static final String AUDIENCES_PROP_DESCRIPTION = "Valid audiences for clients to request.";
+    static final String INTERNAL_FHIR_URL_PROP_NAME = "internalFhirUrl";
+    private static final String INTERNAL_FHIR_URL_PROP_LABEL = "FHIR Base URL";
+    private static final String INTERNAL_FHIR_URL_PROP_DESCRIPTION = "The internal base URL of the FHIR resource server"
+            + " for retrieving Patient resources. This can differ from the external base URL used by the client in"
+            + " the 'aud' parameter.";
 
     @Override
     public String getDisplayType() {
-        return "Audience Validation";
+        return "Patient Selection Authenticator";
     }
 
     @Override
@@ -43,8 +45,7 @@ public class AudienceValidatorFactory implements AuthenticatorFactory {
     }
 
     public static final AuthenticationExecutionModel.Requirement[] REQUIREMENT_CHOICES = {
-            AuthenticationExecutionModel.Requirement.REQUIRED,
-            AuthenticationExecutionModel.Requirement.DISABLED
+            AuthenticationExecutionModel.Requirement.REQUIRED, AuthenticationExecutionModel.Requirement.DISABLED
     };
 
     @Override
@@ -59,14 +60,13 @@ public class AudienceValidatorFactory implements AuthenticatorFactory {
 
     @Override
     public String getHelpText() {
-        return "Verifies that the audience requested by the client (via the 'aud' parameter) "
-                + "matches one of the configured audience values.";
+        return "A patient context picker for supporting the launch/patient scope.";
     }
 
     @Override
     public List<ProviderConfigProperty> getConfigProperties() {
-        return Collections.singletonList(new ProviderConfigProperty(AUDIENCES_PROP_NAME, AUDIENCES_PROP_LABEL,
-                AUDIENCES_PROP_DESCRIPTION, ProviderConfigProperty.MULTIVALUED_STRING_TYPE, null));
+        return Collections.singletonList(new ProviderConfigProperty(INTERNAL_FHIR_URL_PROP_NAME, INTERNAL_FHIR_URL_PROP_LABEL,
+                INTERNAL_FHIR_URL_PROP_DESCRIPTION, ProviderConfigProperty.STRING_TYPE, null));
     }
 
     @Override
@@ -76,7 +76,7 @@ public class AudienceValidatorFactory implements AuthenticatorFactory {
 
     @Override
     public Authenticator create(KeycloakSession session) {
-        return new AudienceValidator(session);
+        return new PatientSelectionForm();
     }
 
     @Override
