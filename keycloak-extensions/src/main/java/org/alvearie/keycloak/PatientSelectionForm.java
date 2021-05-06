@@ -44,6 +44,7 @@ import org.keycloak.services.util.DefaultClientSessionContext;
 import org.keycloak.sessions.AuthenticationSessionModel;
 
 import com.ibm.fhir.core.FHIRMediaType;
+import com.ibm.fhir.model.config.FHIRModelConfig;
 import com.ibm.fhir.model.resource.Bundle;
 import com.ibm.fhir.model.resource.Bundle.Entry;
 import com.ibm.fhir.model.resource.Patient;
@@ -72,6 +73,7 @@ public class PatientSelectionForm implements Authenticator {
     private Client fhirClient;
 
     public PatientSelectionForm() {
+        FHIRModelConfig.setExtendedCodeableConceptValidation(false);
         fhirClient = ResteasyClientBuilder.newClient()
                 .register(new FHIRProvider(RuntimeType.CLIENT));
     }
