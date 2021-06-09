@@ -2,17 +2,17 @@
 <module xmlns="urn:jboss:module:1.5" name="com.ibm.fhir">
   <!-- This module file is only used for testing; the real com.ibm.fhir module will come from jboss-fhir-provider -->
   <resources>
-    <resource-root path="fhir-provider-4.7.1.jar"/>
-    <resource-root path="fhir-config-4.7.1.jar"/>
-    <resource-root path="fhir-model-4.7.1.jar"/>
-    <resource-root path="fhir-core-4.7.1.jar"/>
+    <resource-root path="fhir-provider-4.8.3.jar"/>
+    <resource-root path="fhir-config-4.8.3.jar"/>
+    <resource-root path="fhir-model-4.8.3.jar"/>
+    <resource-root path="fhir-core-4.8.3.jar"/>
     <resource-root path="antlr4-runtime-4.9.1.jar"/>
     <resource-root path="commons-io-2.8.0.jar"/>
-    <resource-root path="commons-lang3-3.11.jar"/>
+    <resource-root path="commons-lang3-3.12.0.jar"/>
     <resource-root path="commons-text-1.9.jar"/>
     <resource-root path="encoder-1.2.3.jar"/>
     <resource-root path="jakarta.annotation-api-1.3.5.jar"/>
-    <resource-root path="jakarta.json-1.1.6.jar"/>
+    <resource-root path="jakarta.json-2.0.1.jar"/>
     <resource-root path="jcip-annotations-1.0-1.jar"/>
   </resources>
   <dependencies>

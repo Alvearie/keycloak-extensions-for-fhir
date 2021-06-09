@@ -5,7 +5,7 @@
     <#elseif section = "header">
         Patient selection
     <#elseif section = "form">
-        <form action="${url.loginAction}" class="${properties.kcFormClass!}" id="kc-u2f-login-form" method="post">
+        <form id="patient-selection" action="${url.loginAction}" class="${properties.kcFormClass!}" id="kc-u2f-login-form" method="post">
             <p>Which patient record would you like to access?</p>
             <div>
                 <#list patients as patient>
@@ -17,7 +17,7 @@
             </div>
 
             <br/>
-            <input class="${properties.kcButtonClass!} ${properties.kcButtonPrimaryClass!} ${properties.kcButtonLargeClass!}"
+            <input id="submit" class="${properties.kcButtonClass!} ${properties.kcButtonPrimaryClass!} ${properties.kcButtonLargeClass!}"
                    type="submit" value="${msg("doSubmit")}"/>
 
         </form>

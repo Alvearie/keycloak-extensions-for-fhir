@@ -77,7 +77,7 @@
 								"authenticatorFlow": false,
 								"configAlias": "localhost",
 								"config": {
-									"audiences": "https://localhost:9443/fhir-server/api/v4##http://host.docker.internal:9080/fhir-server/api/v4"
+									"audiences": "https://localhost:9443/fhir-server/api/v4##http://host.testcontainers.internal:9080/fhir-server/api/v4"
 								}
 							},
 							"Username Password Form": {
@@ -93,7 +93,7 @@
 								"authenticatorFlow": false,
 								"configAlias": "host.docker",
 								"config": {
-									"internalFhirUrl": "http://host.docker.internal:${FHIR_PORT}/fhir-server/api/v4"
+									"internalFhirUrl": "http://host.testcontainers.internal:${FHIR_PORT}/fhir-server/api/v4"
 								}
 							}
 						}

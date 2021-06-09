@@ -8,11 +8,13 @@ package org.alvearie.keycloak;
 import static org.hamcrest.Matchers.notNullValue;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThat;
+import static org.junit.Assert.assertTrue;
 
 import java.io.IOException;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.nio.charset.Charset;
+import java.util.Base64;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -20,6 +22,7 @@ import javax.ws.rs.core.Response;
 
 import org.alvearie.keycloak.config.KeycloakConfigurator;
 import org.alvearie.keycloak.config.util.KeycloakConfig;
+import org.alvearie.utils.SeleniumOauthInteraction;
 import org.apache.commons.io.IOUtils;
 import org.jsmart.zerocode.core.httpclient.BasicHttpClient;
 import org.junit.AfterClass;
@@ -29,7 +32,11 @@ import org.keycloak.admin.client.Keycloak;
 import org.keycloak.admin.client.KeycloakBuilder;
 import org.keycloak.representations.info.ServerInfoRepresentation;
 import org.mockito.Mockito;
+import org.testcontainers.Testcontainers;
 import org.testcontainers.containers.BindMode;
+import org.testcontainers.utility.MountableFile;
+
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 import dasniko.testcontainers.keycloak.KeycloakContainer;
 import okhttp3.mockwebserver.MockResponse;
@@ -41,8 +48,19 @@ public class KeycloakContainerTest {
     private static final String USERNAME = "a";
     private static final String PASSWORD = "a";
     private static final String KC_CLIENT = "test";
+    private static final String AUTH_ENDPOINT = "/auth/realms/test/protocol/openid-connect/auth";
     private static final String TOKEN_ENDPOINT = "/auth/realms/test/protocol/openid-connect/token";
 
+    // per https://www.testcontainers.org/features/networking/#exposing-host-ports-to-the-container
+    // the host's port should be known prior to starting the container
+    private static MockWebServer mockFhirServer;
+    static {
+        mockFhirServer = new MockWebServer();
+        setupFHIRPortEnvVar(mockFhirServer.getPort());
+        Testcontainers.exposeHostPorts(mockFhirServer.getPort());
+    }
+
+    // per the testcontainers doc, the contain should be started in a static block before JUnit starts up
     private static KeycloakContainer keycloak;
     static {
         keycloak = new KeycloakContainer().withExtensionClassesFrom("target/classes");
@@ -54,10 +72,21 @@ public class KeycloakContainerTest {
     }
 
     private static Keycloak adminClient;
-    private static MockWebServer mockFhirServer;
+
+    private static void setupFHIRPortEnvVar(int port) {
+        Map<String,String> env = new HashMap<>(KeycloakConfig.EnvironmentVariables.get());
+        env.put("FHIR_PORT", Integer.toString(port));
+        Mockito.mockStatic(KeycloakConfig.EnvironmentVariables.class);
+        Mockito.when(KeycloakConfig.EnvironmentVariables.get()).thenReturn(env);
+    }
 
     @BeforeClass
     public static void setUp() throws Exception {
+        mockFhirServer.enqueue(new MockResponse()
+                .setHeader("Content-Type", "application/fhir+json")
+                .setBody(IOUtils.resourceToString("/mock_fhir_response.json", Charset.forName("UTF-8")))
+                );
+
         adminClient = KeycloakBuilder.builder()
                 .serverUrl(keycloak.getAuthServerUrl())
                 .realm(MASTER_REALM)
@@ -67,30 +96,18 @@ public class KeycloakContainerTest {
                 .build();
         KeycloakConfigurator configurator = new KeycloakConfigurator(adminClient);
 
-        mockFhirServer = new MockWebServer();
-        mockFhirServer.enqueue(new MockResponse()
-                .setHeader("Content-Type", "application/fhir+json")
-                .setBody(IOUtils.resourceToString("/mock_fhir_response.json", Charset.forName("UTF-8")))
-                );
-        mockFhirServer.start();
-        setupFHIRPortEnvVar(mockFhirServer.getPort());
-
         KeycloakConfig config = new KeycloakConfig("keycloak-config.json");
         configurator.initializeRealm("test", config.getPropertyGroup("test"));
-    }
-
-    private static void setupFHIRPortEnvVar(int port) {
-        Map<String,String> env = new HashMap<>(KeycloakConfig.EnvironmentVariables.get());
-        env.put("FHIR_PORT", Integer.toString(port));
-        Mockito.mockStatic(KeycloakConfig.EnvironmentVariables.class);
-        Mockito.when(KeycloakConfig.EnvironmentVariables.get()).thenReturn(env);
     }
 
     @AfterClass
     public static void tearDown() throws IOException {
         mockFhirServer.shutdown();
 
-        // no container cleanup to enable re-use
+        System.out.println("\n\n" + "Dumping container logs:" + "\n");
+        System.out.println(keycloak.getLogs());
+
+        // no explicit container cleanup to enable re-use
         //keycloak.close();
     }
 
@@ -101,17 +118,40 @@ public class KeycloakContainerTest {
     }
 
     @Test
-    public void testMockFhirServer() throws Exception {
-        URL url = new URL("http://localhost:" + mockFhirServer.getPort() + "/auth");
-        HttpURLConnection connection = (HttpURLConnection) url.openConnection();
-        connection.setRequestMethod("GET");
-        assertEquals(connection.getResponseCode(), 200);
-        IOUtils.copy(connection.getInputStream(), System.out);
+    public void testLogin() throws Exception {
+        Integer port = keycloak.getHttpPort();
+        String host = "http://" + keycloak.getHost();
+        SeleniumOauthInteraction s = new SeleniumOauthInteraction("a", "a", "test", "http://localhost",
+                host + ":" + port + AUTH_ENDPOINT, host + ":" + port + TOKEN_ENDPOINT);
+
+        Map<String, String> authResponse = s.fetchCode("fhirUser", "launch/patient");
+
+        System.out.println("Auth response: " + authResponse);
+
+        assertTrue(authResponse.containsKey("code"));
+
+        Map<String, String> tokenResponse = s.fetchToken(authResponse.get("code"));
+
+        System.out.println("Token response: " + tokenResponse);
+
+        assertTrue(tokenResponse.containsKey("access_token"));
+        String[] accessTokenParts = tokenResponse.get("access_token").split("\\.");
+        assertEquals(3, accessTokenParts.length);
+        Map<String,?> claims = new ObjectMapper().readValue(Base64.getDecoder().decode(accessTokenParts[1]), HashMap.class);
+        assertTrue(claims.containsKey("patient_id"));
+        System.out.println("patient_id claim: " + claims.get("patient_id"));
+
+        assertTrue(tokenResponse.containsKey("refresh_token"));
+        String[] refreshTokenParts = tokenResponse.get("access_token").split("\\.");
+        assertEquals(3, refreshTokenParts.length);
+
+        assertTrue(tokenResponse.containsKey("patient"));
+        assertEquals("example", tokenResponse.get("patient"));
     }
 
     @Test
     public void getHomePage() throws Exception {
-        Integer port = keycloak.getMappedPort(8080);
+        Integer port = keycloak.getHttpPort();
         URL url = new URL("http://localhost:" + port + "/auth");
         HttpURLConnection connection = (HttpURLConnection) url.openConnection();
         connection.setRequestMethod("GET");
