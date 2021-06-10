@@ -39,6 +39,7 @@ import org.testcontainers.utility.MountableFile;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import dasniko.testcontainers.keycloak.KeycloakContainer;
+import io.github.bonigarcia.wdm.config.DriverManagerType;
 import okhttp3.mockwebserver.MockResponse;
 import okhttp3.mockwebserver.MockWebServer;
 
@@ -121,7 +122,8 @@ public class KeycloakContainerTest {
     public void testLogin() throws Exception {
         Integer port = keycloak.getHttpPort();
         String host = "http://" + keycloak.getHost();
-        SeleniumOauthInteraction s = new SeleniumOauthInteraction("a", "a", "test", "http://localhost",
+        SeleniumOauthInteraction s = new SeleniumOauthInteraction(DriverManagerType.CHROMIUM,
+                "a", "a", "test", "http://localhost",
                 host + ":" + port + AUTH_ENDPOINT, host + ":" + port + TOKEN_ENDPOINT);
 
         Map<String, String> authResponse = s.fetchCode("fhirUser", "launch/patient");

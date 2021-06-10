@@ -28,8 +28,6 @@ import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebElement;
 import org.openqa.selenium.chrome.ChromeDriver;
 import org.openqa.selenium.chrome.ChromeOptions;
-import org.openqa.selenium.firefox.FirefoxDriver;
-import org.openqa.selenium.firefox.FirefoxOptions;
 import org.openqa.selenium.support.ui.ExpectedConditions;
 import org.openqa.selenium.support.ui.WebDriverWait;
 import org.slf4j.Logger;
@@ -40,6 +38,7 @@ import com.google.inject.Inject;
 import com.google.inject.name.Named;
 
 import io.github.bonigarcia.wdm.WebDriverManager;
+import io.github.bonigarcia.wdm.config.DriverManagerType;
 
 public class SeleniumOauthInteraction {
 
@@ -73,9 +72,9 @@ public class SeleniumOauthInteraction {
 
     private Map<String, String> tokenResponse = new HashMap<String,String>();
 
-    public SeleniumOauthInteraction(String user, String password, String appclient_id, String appredirect_uri,
+    public SeleniumOauthInteraction(DriverManagerType driverType, String user, String password, String appclient_id, String appredirect_uri,
             String oauth_auth_url, String oauth_token_url){
-        this();
+        this(driverType);
         keycloakUser = user;
         keycloakPwd = password;
         appClientId = appclient_id;
@@ -84,8 +83,8 @@ public class SeleniumOauthInteraction {
         oauthTokenUrl = oauth_token_url;
     }
 
-    public SeleniumOauthInteraction() {
-        WebDriverManager.chromedriver().setup();
+    public SeleniumOauthInteraction(DriverManagerType driverType) {
+        WebDriverManager.getInstance(driverType).setup();
 
         ChromeOptions options = new ChromeOptions();
         options.setHeadless(true);
@@ -241,8 +240,7 @@ public class SeleniumOauthInteraction {
      * @throws Exception
      */
     public Map<String, String> fetchToken(String code) throws Exception {
-        BasicHttpClient bh = new BasicHttpClient();
-        Map<String, Object> headers = new HashMap<String, Object>();
+        Map<String, String> headers = new HashMap<>();
         headers.put("Content-Type", "application/x-www-form-urlencoded");
 
         Map<String,String> params = new HashMap<>();
@@ -307,15 +305,15 @@ public class SeleniumOauthInteraction {
     // main method allows for easy standalone testing. This could be moved to a separate file.
     public static void main(String[] args) throws Exception {
         String realm = "test";
-        String baseUrl = "https://localhost:8080/auth/realms/" + realm + "/protocol/openid-connect/";
+        String baseUrl = "http://localhost:8080/auth/realms/" + realm + "/protocol/openid-connect/";
 
-        SeleniumOauthInteraction s = new SeleniumOauthInteraction();
+        SeleniumOauthInteraction s = new SeleniumOauthInteraction(DriverManagerType.CHROMIUM);
         s.keycloakUser = "a";
         s.keycloakPwd = "a";
         s.appClientId = "test";
         s.appRedirectUri = "https://localhost";
-        s.oauthAuthUrl = baseUrl + "/auth";
-        s.oauthTokenUrl = baseUrl + "/token";
+        s.oauthAuthUrl = baseUrl + "auth";
+        s.oauthTokenUrl = baseUrl + "token";
 
         Map<String, String> rc = s.getToken();
 
