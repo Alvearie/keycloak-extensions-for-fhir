@@ -41,10 +41,6 @@ public class TestHelper {
     private String realm_name;
 
     @Inject(optional = true)
-    @Named("keycloak.realm.group")
-    private String realm_group;
-
-    @Inject(optional = true)
     @Named("keycloak.db.vendor")
     private String db_vendor;
 
@@ -73,7 +69,7 @@ public class TestHelper {
         KeycloakConfigurator configurator = new KeycloakConfigurator(adminClient);
         KeycloakConfig config = new KeycloakConfig("keycloak-config.json");
 
-        configurator.initializeRealm(realm_name, config.getPropertyGroup(realm_group));
+        configurator.initializeRealm(realm_name, config.getPropertyGroup(realm_name));
         // waiting an extra 3 secs for the container to initiate
         Thread.sleep(3000);
 

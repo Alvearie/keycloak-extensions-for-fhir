@@ -11,11 +11,11 @@ import java.util.Base64;
 import java.util.List;
 import java.util.Map;
 
-import javax.json.JsonArray;
-import javax.json.JsonNumber;
-import javax.json.JsonObject;
-import javax.json.JsonString;
-import javax.json.JsonValue;
+import jakarta.json.JsonArray;
+import jakarta.json.JsonNumber;
+import jakarta.json.JsonObject;
+import jakarta.json.JsonString;
+import jakarta.json.JsonValue;
 
 /**
  * This class represents a collection of properties - a property group. This could be the entire set of properties
@@ -113,11 +113,11 @@ public class PropertyGroup {
             if (value instanceof List) {
                 List<?> valueList = (List<?>) value;
                 for (int i = 0; i < valueList.size(); i++) {
-                    strings.add((String) valueList.get(i).toString());
+                    strings.add(valueList.get(i).toString());
                 }
             }
             else {
-                strings.add((String) value.toString());
+                strings.add(value.toString());
             }
         }
         return strings;
@@ -138,7 +138,7 @@ public class PropertyGroup {
         if (array != null) {
             strings = new ArrayList<String>();
             for (int i = 0; i < array.length; i++) {
-                strings.add((String) array[i].toString());
+                strings.add(array[i].toString());
             }
         }
         return strings;
@@ -283,6 +283,7 @@ public class PropertyGroup {
     /**
      * Returns the String representation of the PropertyGroup instance.
      */
+    @Override
     public String toString() {
         StringBuilder sb = new StringBuilder();
         sb.append("PropertyGroup[");
