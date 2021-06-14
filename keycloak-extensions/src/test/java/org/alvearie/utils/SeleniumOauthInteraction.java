@@ -26,8 +26,8 @@ import org.openqa.selenium.By;
 import org.openqa.selenium.TimeoutException;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebElement;
-import org.openqa.selenium.chrome.ChromeDriver;
-import org.openqa.selenium.chrome.ChromeOptions;
+import org.openqa.selenium.firefox.FirefoxDriver;
+import org.openqa.selenium.firefox.FirefoxOptions;
 import org.openqa.selenium.support.ui.ExpectedConditions;
 import org.openqa.selenium.support.ui.WebDriverWait;
 import org.slf4j.Logger;
@@ -38,7 +38,6 @@ import com.google.inject.Inject;
 import com.google.inject.name.Named;
 
 import io.github.bonigarcia.wdm.WebDriverManager;
-import io.github.bonigarcia.wdm.config.DriverManagerType;
 
 public class SeleniumOauthInteraction {
 
@@ -70,11 +69,9 @@ public class SeleniumOauthInteraction {
 
     private WebDriver driver;
 
-    private Map<String, String> tokenResponse = new HashMap<String,String>();
-
-    public SeleniumOauthInteraction(DriverManagerType driverType, String user, String password, String appclient_id, String appredirect_uri,
+    public SeleniumOauthInteraction(String user, String password, String appclient_id, String appredirect_uri,
             String oauth_auth_url, String oauth_token_url){
-        this(driverType);
+        this();
         keycloakUser = user;
         keycloakPwd = password;
         appClientId = appclient_id;
@@ -83,35 +80,21 @@ public class SeleniumOauthInteraction {
         oauthTokenUrl = oauth_token_url;
     }
 
-    public SeleniumOauthInteraction(DriverManagerType driverType) {
-        WebDriverManager.getInstance(driverType).setup();
+    public SeleniumOauthInteraction() {
+        WebDriverManager.firefoxdriver().setup();
 
-        ChromeOptions options = new ChromeOptions();
+        FirefoxOptions options = new FirefoxOptions();
         options.setHeadless(true);
 
-        driver = new ChromeDriver(options);
+        driver = new FirefoxDriver(options);
     }
 
     /**
-     * Returns a previously obtained token response or runs the entire implicit auth flow (fetchCode followed by fetchToken)
-     * to obtain a new one.
+     * Hits the configured auth url with the configured client id and secret
+     * and passes the configured username and password along with the passed scopes.
      *
-     * @return
-     * @throws Exception
-     */
-    public Map<String, String> getToken() throws Exception {
-        // if oauthToken is already generated in the same session, then use the existing one.
-        if (tokenResponse != null && !tokenResponse.isEmpty()) {
-            return tokenResponse;
-        }
-
-        Map<String,String> loginResponseParams = fetchCode("fhirUser", "launch/patient");
-        return fetchToken(loginResponseParams.get("code"));
-    }
-
-    /**
-     * @param url
-     * @return
+     * @param scope one or more requested scopes
+     * @return a map of key-value pairs from the query string of the redirect location on the auth response
      * @throws Exception
      */
     public Map<String, String> fetchCode(String... scope) throws Exception {
@@ -123,7 +106,8 @@ public class SeleniumOauthInteraction {
                     new BasicNameValuePair("state", UUID.randomUUID().toString()),
                     new BasicNameValuePair("client_id", appClientId),
                     new BasicNameValuePair("scope", String.join(" ", scope)),
-                    new BasicNameValuePair("redirect_uri", appRedirectUri)
+                    new BasicNameValuePair("redirect_uri", appRedirectUri),
+                    new BasicNameValuePair("aud", "https://localhost:9443/fhir-server/api/v4")
             };
             String queryString = URLEncodedUtils.format(Arrays.asList(params), UTF_8);
 
@@ -199,6 +183,9 @@ public class SeleniumOauthInteraction {
                 }
             }
         } catch (Exception e) {
+            if (driver == null || driver.getCurrentUrl() == null) {
+                throw e;
+            }
             // adding the while loop to avoid the timing issues and reliably
             // extract the grant code from next page after clicking the login
             // button
@@ -273,7 +260,9 @@ public class SeleniumOauthInteraction {
             try {
                 Response r = bh.execute(oauthTokenUrl, "POST", headers, null, jsonbody);
 
-                return new ObjectMapper().readValue(r.getEntity().toString(), HashMap.class);
+                @SuppressWarnings("unchecked")
+                Map<String, String> result = new ObjectMapper().readValue(r.getEntity().toString(), HashMap.class);
+                return result;
             } catch (Exception e) {
                 LOGGER.info("Caught exception running POST to " + oauthTokenUrl, e);
                 throw e;
@@ -307,7 +296,7 @@ public class SeleniumOauthInteraction {
         String realm = "test";
         String baseUrl = "http://localhost:8080/auth/realms/" + realm + "/protocol/openid-connect/";
 
-        SeleniumOauthInteraction s = new SeleniumOauthInteraction(DriverManagerType.CHROMIUM);
+        SeleniumOauthInteraction s = new SeleniumOauthInteraction();
         s.keycloakUser = "a";
         s.keycloakPwd = "a";
         s.appClientId = "test";
@@ -315,12 +304,13 @@ public class SeleniumOauthInteraction {
         s.oauthAuthUrl = baseUrl + "auth";
         s.oauthTokenUrl = baseUrl + "token";
 
-        Map<String, String> rc = s.getToken();
+        Map<String, String> authResponse = s.fetchCode("openid", "launch/patient");
+        Map<String, String> tokenResponse = s.fetchToken(authResponse.get("code"));
 
-        System.out.println(rc);
+        System.out.println(tokenResponse);
     }
 
-    private String quote(String in) {
-        return "\"" + in + "\"";
+    private String quote(String s) {
+        return "\"" + s + "\"";
     }
 }

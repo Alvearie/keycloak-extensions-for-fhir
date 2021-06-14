@@ -97,11 +97,7 @@ public class PatientSelectionForm implements Authenticator {
             return;
         }
 
-        List<String> resourceIds = context.getUser().getAttributeStream(ATTRIBUTE_RESOURCE_ID)
-                .flatMap(a -> Arrays.stream(a.split(" ")))
-                .map(String::trim)
-                .filter(s -> !s.isEmpty())
-                .collect(Collectors.toList());
+        List<String> resourceIds = getResourceIdsForUser(context);
         if (resourceIds.size() == 0) {
             fail(context, "Expected user to have one or more resourceId attributes, but found none");
             return;
@@ -155,6 +151,14 @@ public class PatientSelectionForm implements Authenticator {
                 context.challenge(response);
             }
         }
+    }
+
+    private List<String> getResourceIdsForUser(AuthenticationFlowContext context) {
+        return context.getUser().getAttributeStream(ATTRIBUTE_RESOURCE_ID)
+                .flatMap(a -> Arrays.stream(a.split(" ")))
+                .map(String::trim)
+                .filter(s -> !s.isEmpty())
+                .collect(Collectors.toList());
     }
 
     private String buildInternalAccessToken(AuthenticationFlowContext context, List<String> resourceIds) {
@@ -293,10 +297,10 @@ public class PatientSelectionForm implements Authenticator {
         MultivaluedMap<String, String> formData = context.getHttpRequest().getDecodedFormParameters();
         String patient = formData.getFirst("patient");
 
-        LOG.infof("Retrieved patient=%s", patient);
+        LOG.debugf("The user selected patient=%s", patient);
 
-        if (patient == null || patient.trim().isEmpty()) {
-
+        if (patient == null || patient.trim().isEmpty() || !getResourceIdsForUser(context).contains(patient)) {
+            LOG.warnf("The patient selection '%s' is not valid for the authenticated user.", patient);
             context.cancelLogin();
 
             // reauthenticate...
@@ -304,7 +308,7 @@ public class PatientSelectionForm implements Authenticator {
             return;
         }
 
-        succeed(context, patient);
+        succeed(context, patient.trim());
     }
 
     @Override

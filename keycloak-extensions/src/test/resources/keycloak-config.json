@@ -72,7 +72,7 @@
 						"authenticationExecutions": {
 							"Audience Validation": {
 								"authenticator": "audience-validator",
-								"requirement": "DISABLED",
+								"requirement": "REQUIRED",
 								"priority": 10,
 								"authenticatorFlow": false,
 								"configAlias": "localhost",
