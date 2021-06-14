@@ -64,7 +64,7 @@ public class PatientSelectionForm implements Authenticator {
 
     private static final Logger LOG = Logger.getLogger(PatientSelectionForm.class);
 
-    private static final String SMART_AUDIENCE_PARAM = "aud";
+    private static final String SMART_AUDIENCE_PARAM = "client_request_param_aud";
     private static final String SMART_SCOPE_PATIENT_READ = "patient/Patient.read";
     private static final String SMART_SCOPE_LAUNCH_PATIENT = "launch/patient";
 
@@ -182,7 +182,7 @@ public class PatientSelectionForm implements Authenticator {
         ClientSessionContext clientSessionCtx = DefaultClientSessionContext.fromClientSessionAndClientScopes(authedClientSession,
                 readPatient, session);
 
-        String requestedAudience = context.getUriInfo().getQueryParameters().getFirst(SMART_AUDIENCE_PARAM);
+        String requestedAudience = authSession.getClientNote(SMART_AUDIENCE_PARAM);
         if (requestedAudience == null) {
             String internalFhirUrl = context.getAuthenticatorConfig().getConfig().get(PatientSelectionFormFactory.INTERNAL_FHIR_URL_PROP_NAME);
             LOG.info("Client request is missing the 'aud' parameter, using '" + internalFhirUrl + "' from config.");
@@ -297,10 +297,10 @@ public class PatientSelectionForm implements Authenticator {
         MultivaluedMap<String, String> formData = context.getHttpRequest().getDecodedFormParameters();
         String patient = formData.getFirst("patient");
 
-        LOG.debugf("The user selected patient=%s", patient);
+        LOG.debugf("The user selected patient '%s'", patient);
 
-        if (patient == null || patient.trim().isEmpty() || !getResourceIdsForUser(context).contains(patient)) {
-            LOG.warnf("The patient selection '%s' is not valid for the authenticated user.", patient);
+        if (patient == null || patient.trim().isEmpty() || !getResourceIdsForUser(context).contains(patient.trim())) {
+            LOG.warnf("The patient selection '%s' is not valid for the authenticated user.", patient.trim());
             context.cancelLogin();
 
             // reauthenticate...
