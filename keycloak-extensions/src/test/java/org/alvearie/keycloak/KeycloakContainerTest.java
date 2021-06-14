@@ -34,14 +34,15 @@ import org.keycloak.representations.info.ServerInfoRepresentation;
 import org.mockito.Mockito;
 import org.testcontainers.Testcontainers;
 import org.testcontainers.containers.BindMode;
-import org.testcontainers.utility.MountableFile;
 
+import com.fasterxml.jackson.core.JsonParseException;
+import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import dasniko.testcontainers.keycloak.KeycloakContainer;
-import io.github.bonigarcia.wdm.config.DriverManagerType;
 import okhttp3.mockwebserver.MockResponse;
 import okhttp3.mockwebserver.MockWebServer;
+import okhttp3.mockwebserver.RecordedRequest;
 
 public class KeycloakContainerTest {
     private static final String MASTER_REALM = "master";
@@ -68,7 +69,9 @@ public class KeycloakContainerTest {
         keycloak.addFileSystemBind("target/dependency", "/opt/jboss/keycloak/modules/system/layers/base/com/ibm/fhir/main", BindMode.READ_ONLY);
         // Shouldn't be needed, but sometimes is: https://github.com/dasniko/testcontainers-keycloak/issues/15
         keycloak.withEnv("DB_VENDOR", "H2");
-        keycloak.withReuse(true);
+        // Temporarily uncomment to keep the container running after the tests complete
+        // or keep it uncommented for reduced cycle time after https://github.com/dasniko/testcontainers-keycloak/issues/33
+//        keycloak.withReuse(true);
         keycloak.start();
     }
 
@@ -122,26 +125,31 @@ public class KeycloakContainerTest {
     public void testLogin() throws Exception {
         Integer port = keycloak.getHttpPort();
         String host = "http://" + keycloak.getHost();
-        SeleniumOauthInteraction s = new SeleniumOauthInteraction(DriverManagerType.CHROMIUM,
-                "a", "a", "test", "http://localhost",
+        SeleniumOauthInteraction s = new SeleniumOauthInteraction("a", "a", "test", "http://localhost",
                 host + ":" + port + AUTH_ENDPOINT, host + ":" + port + TOKEN_ENDPOINT);
 
         Map<String, String> authResponse = s.fetchCode("fhirUser", "launch/patient");
 
         System.out.println("Auth response: " + authResponse);
-
         assertTrue(authResponse.containsKey("code"));
+
+        // verify that the underlying request from Keycloak to the mock FHIR server looks like we want
+        RecordedRequest recordedRequest = mockFhirServer.takeRequest();
+        assertEquals("POST", recordedRequest.getMethod());
+        assertEquals("/fhir-server/api/v4", recordedRequest.getPath());
+        String auth = recordedRequest.getHeader("Authorization");
+        assertTrue(auth.startsWith("Bearer "));
+        verifyToken(auth.substring("Bearer ".length()));
+        String request = recordedRequest.getBody().readUtf8();
+        Map<?,?> json = new ObjectMapper().readValue(request, HashMap.class);
+        assertEquals("Bundle", json.get("resourceType"));
+
 
         Map<String, String> tokenResponse = s.fetchToken(authResponse.get("code"));
 
         System.out.println("Token response: " + tokenResponse);
-
         assertTrue(tokenResponse.containsKey("access_token"));
-        String[] accessTokenParts = tokenResponse.get("access_token").split("\\.");
-        assertEquals(3, accessTokenParts.length);
-        Map<String,?> claims = new ObjectMapper().readValue(Base64.getDecoder().decode(accessTokenParts[1]), HashMap.class);
-        assertTrue(claims.containsKey("patient_id"));
-        System.out.println("patient_id claim: " + claims.get("patient_id"));
+        verifyToken(tokenResponse.get("access_token"));
 
         assertTrue(tokenResponse.containsKey("refresh_token"));
         String[] refreshTokenParts = tokenResponse.get("access_token").split("\\.");
@@ -149,6 +157,15 @@ public class KeycloakContainerTest {
 
         assertTrue(tokenResponse.containsKey("patient"));
         assertEquals("example", tokenResponse.get("patient"));
+    }
+
+    private void verifyToken(String accessToken)
+            throws IOException, JsonParseException, JsonMappingException {
+        String[] accessTokenParts = accessToken.split("\\.");
+        assertEquals(3, accessTokenParts.length);
+        Map<?,?> claims = new ObjectMapper().readValue(Base64.getDecoder().decode(accessTokenParts[1]), HashMap.class);
+        assertTrue(claims.containsKey("patient_id"));
+        System.out.println("patient_id claim: " + claims.get("patient_id"));
     }
 
     @Test
