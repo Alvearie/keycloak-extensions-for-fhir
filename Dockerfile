@@ -4,7 +4,7 @@
 # SPDX-License-Identifier: Apache-2.0
 # ----------------------------------------------------------------------------
 
-FROM quay.io/keycloak/keycloak:12.0.4
+FROM quay.io/keycloak/keycloak:13.0.1
 
 # This can be overridden, but without this I've found the db vendor-detection in Keycloak to be brittle
 ENV DB_VENDOR=H2
