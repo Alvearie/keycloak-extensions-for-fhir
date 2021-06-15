@@ -5,6 +5,8 @@ SPDX-License-Identifier: Apache-2.0
 */
 package org.alvearie.keycloak.config;
 
+import javax.ws.rs.BadRequestException;
+
 import org.alvearie.keycloak.config.util.KeycloakConfig;
 import org.alvearie.keycloak.config.util.PropertyGroup;
 import org.alvearie.keycloak.config.util.PropertyGroup.PropertyEntry;
@@ -53,8 +55,13 @@ public class Main {
         }
 
         // Perform the action
-        KeycloakConfig config = new KeycloakConfig(configFilePath);
-        applyConfig(config);
+        try {
+            KeycloakConfig config = new KeycloakConfig(configFilePath);
+            applyConfig(config);
+        } catch (BadRequestException e) {
+            System.err.println(e.getResponse().readEntity(String.class));
+            throw e;
+        }
     }
 
     /**
