@@ -123,7 +123,15 @@
 				"password": "a",
 				"passwordTemporary": false,
 				"attributes": {
-					"resourceId": ["Patient0000 example ae64a693-0313-4e5b-ba33-a3921f257d36"]
+					"resourceId": ["PatientA PatientB PatientMissing"]
+				}
+			},
+			"b": {
+				"enabled": true,
+				"password": "b",
+				"passwordTemporary": false,
+				"attributes": {
+					"resourceId": ["PatientB"]
 				}
 			}
 		}
