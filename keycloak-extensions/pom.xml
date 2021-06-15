@@ -11,7 +11,6 @@
   <packaging>jar</packaging>
 
   <dependencies>
-
     <!-- The com.ibm.fhir dependencies go first to tightly control the versions
          because we need to ensure they match the versions listed in module.xml -->
     <dependency>
@@ -75,19 +74,8 @@
       <artifactId>webdrivermanager</artifactId>
     </dependency>
     <dependency>
-      <groupId>org.jsmart</groupId>
-      <artifactId>zerocode-tdd</artifactId>
-      <exclusions>
-        <exclusion>
-          <groupId>org.jboss.resteasy</groupId>
-          <artifactId>resteasy-jaxrs</artifactId>
-        </exclusion>
-      </exclusions>
-    </dependency>
-    <dependency>
       <groupId>com.squareup.okhttp3</groupId>
       <artifactId>mockwebserver</artifactId>
-      <scope>test</scope>
     </dependency>
   </dependencies>
 

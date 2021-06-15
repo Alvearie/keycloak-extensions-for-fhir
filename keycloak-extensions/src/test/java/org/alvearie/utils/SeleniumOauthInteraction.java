@@ -8,20 +8,22 @@ package org.alvearie.utils;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static org.junit.Assert.fail;
 
-import java.io.UnsupportedEncodingException;
 import java.net.URI;
-import java.net.URISyntaxException;
 import java.net.URLDecoder;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
 
+import javax.ws.rs.client.Client;
+import javax.ws.rs.client.ClientBuilder;
+import javax.ws.rs.client.Entity;
+import javax.ws.rs.client.WebTarget;
+import javax.ws.rs.core.MultivaluedHashMap;
 import javax.ws.rs.core.Response;
 
 import org.apache.hc.core5.http.message.BasicNameValuePair;
 import org.apache.hc.core5.net.URLEncodedUtils;
-import org.jsmart.zerocode.core.httpclient.BasicHttpClient;
 import org.openqa.selenium.By;
 import org.openqa.selenium.TimeoutException;
 import org.openqa.selenium.WebDriver;
@@ -33,54 +35,26 @@ import org.openqa.selenium.support.ui.WebDriverWait;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.google.inject.Inject;
-import com.google.inject.name.Named;
-
 import io.github.bonigarcia.wdm.WebDriverManager;
 
 public class SeleniumOauthInteraction {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(SeleniumOauthInteraction.class);
 
-    @Inject(optional = true)
-    @Named("keycloak.username")
-    private String keycloakUser;
-
-    @Inject(optional = true)
-    @Named("keycloak.password")
-    private String keycloakPwd;
-
-    @Inject(optional = true)
-    @Named("app.clientid")
     private String appClientId;
-
-    @Inject(optional = true)
-    @Named("app.redirecturi")
     private String appRedirectUri;
-
-    @Inject(optional = true)
-    @Named("oauth.auth.url")
     private String oauthAuthUrl;
-
-    @Inject(optional = true)
-    @Named("oauth.token.url")
     private String oauthTokenUrl;
 
     private WebDriver driver;
 
-    public SeleniumOauthInteraction(String user, String password, String appclient_id, String appredirect_uri,
+    public SeleniumOauthInteraction(String appclient_id, String appredirect_uri,
             String oauth_auth_url, String oauth_token_url){
-        this();
-        keycloakUser = user;
-        keycloakPwd = password;
         appClientId = appclient_id;
         appRedirectUri = appredirect_uri;
         oauthAuthUrl = oauth_auth_url;
         oauthTokenUrl = oauth_token_url;
-    }
 
-    public SeleniumOauthInteraction() {
         WebDriverManager.firefoxdriver().setup();
 
         FirefoxOptions options = new FirefoxOptions();
@@ -90,14 +64,18 @@ public class SeleniumOauthInteraction {
     }
 
     /**
-     * Hits the configured auth url with the configured client id and secret
-     * and passes the configured username and password along with the passed scopes.
+     * Hits the configured auth url with the configured client_id and redirect_uri, as well as
+     * the passed audience and scopes, then tests the login forms with the passed username and password via
+     * the Selenium Firefox WebDriver.
      *
+     * @param user
+     * @param pass
+     * @param aud
      * @param scope one or more requested scopes
      * @return a map of key-value pairs from the query string of the redirect location on the auth response
      * @throws Exception
      */
-    public Map<String, String> fetchCode(String... scope) throws Exception {
+    public Map<String, String> fetchCode(String user, String pass, String aud, String... scope) throws Exception {
         Map<String, String> response = new HashMap<String, String>();
 
         try {
@@ -105,9 +83,9 @@ public class SeleniumOauthInteraction {
                     new BasicNameValuePair("response_type", "code"),
                     new BasicNameValuePair("state", UUID.randomUUID().toString()),
                     new BasicNameValuePair("client_id", appClientId),
-                    new BasicNameValuePair("scope", String.join(" ", scope)),
                     new BasicNameValuePair("redirect_uri", appRedirectUri),
-                    new BasicNameValuePair("aud", "https://localhost:9443/fhir-server/api/v4")
+                    new BasicNameValuePair("aud", aud),
+                    new BasicNameValuePair("scope", String.join(" ", scope)),
             };
             String queryString = URLEncodedUtils.format(Arrays.asList(params), UTF_8);
 
@@ -116,9 +94,9 @@ public class SeleniumOauthInteraction {
 
             WebElement dynamicElement = (new WebDriverWait(driver, 10))
                     .until(ExpectedConditions.presenceOfElementLocated(By.id("username")));
-            dynamicElement.sendKeys(keycloakUser);
+            dynamicElement.sendKeys(user);
 
-            driver.findElement(By.id("password")).sendKeys(keycloakPwd);
+            driver.findElement(By.id("password")).sendKeys(pass);
             driver.findElement(By.id("kc-login")).click();
 
             Boolean loginButtonDisappeared = (new WebDriverWait(driver, 5, 200))
@@ -145,8 +123,8 @@ public class SeleniumOauthInteraction {
                 new WebDriverWait(driver, 3, 200)
                         .until(ExpectedConditions.presenceOfElementLocated(By.id("patient-selection")));
 
-                // simulate choosing the patient that has an id of "example"
-                driver.findElement(By.id("example")).click();
+                // simulate choosing the patient that has an id of "PatientA"
+                driver.findElement(By.id("PatientA")).click();
                 driver.findElement(By.id("submit")).click();
 
             } catch ( TimeoutException e ) {
@@ -247,47 +225,24 @@ public class SeleniumOauthInteraction {
      * @throws Exception
      */
     public Map<String, String> fetchTokenWith(Map<String,String> requestParams) throws Exception {
-            BasicHttpClient bh = new BasicHttpClient();
-            Map<String, Object> headers = new HashMap<String, Object>();
-            headers.put("Content-Type", "application/x-www-form-urlencoded");
+        Client client = ClientBuilder.newClient();
+        WebTarget target = client.target(oauthTokenUrl);
 
-            String jsonbody = "{"
-                    + quote("grant_type")   + ": " + quote(requestParams.get("grant_type")) + ", "
-                    + quote("code")         + ": " + quote(requestParams.get("code")) + ", "
-                    + quote("client_id")    + ": " + quote(requestParams.get("client_id")) + ", "
-                    + quote("redirect_uri") + ": " + quote(requestParams.get("redirect_uri"))
-                    + "}";
-            try {
-                Response r = bh.execute(oauthTokenUrl, "POST", headers, null, jsonbody);
+        Response response = target.request().post(Entity.form(new MultivaluedHashMap<String, String>(requestParams)));
 
-                @SuppressWarnings("unchecked")
-                Map<String, String> result = new ObjectMapper().readValue(r.getEntity().toString(), HashMap.class);
-                return result;
-            } catch (Exception e) {
-                LOGGER.info("Caught exception running POST to " + oauthTokenUrl, e);
-                throw e;
-            }
+        @SuppressWarnings("unchecked")
+        Map<String, String> result = response.readEntity(HashMap.class);
+        return result;
     }
 
-    private Map<String, String> getQueryMap(String url) {
+    private Map<String, String> getQueryMap(String url) throws Exception {
         Map<String, String> response = new HashMap<String, String>();
-        String[] pairs;
-        try {
-            pairs = new URI(url).getQuery().split("&");
-            for (String pair : pairs) {
-                int idx = pair.indexOf("=");
-                response.put(URLDecoder.decode(pair.substring(0, idx), "UTF-8"),
-                        URLDecoder.decode(pair.substring(idx + 1), "UTF-8"));
-            }
-
-        } catch (URISyntaxException e) {
-            // catch exception -- hopefully next URL is successful
-            e.printStackTrace();
-        } catch ( UnsupportedEncodingException e ) {
-            // catch exception -- hopefully next URL is successful
-            e.printStackTrace();
+        String[] pairs = new URI(url).getQuery().split("&");
+        for (String pair : pairs) {
+            int idx = pair.indexOf("=");
+            response.put(URLDecoder.decode(pair.substring(0, idx), "UTF-8"),
+                    URLDecoder.decode(pair.substring(idx + 1), "UTF-8"));
         }
-
         return response;
     }
 
@@ -296,21 +251,13 @@ public class SeleniumOauthInteraction {
         String realm = "test";
         String baseUrl = "http://localhost:8080/auth/realms/" + realm + "/protocol/openid-connect/";
 
-        SeleniumOauthInteraction s = new SeleniumOauthInteraction();
-        s.keycloakUser = "a";
-        s.keycloakPwd = "a";
-        s.appClientId = "test";
-        s.appRedirectUri = "https://localhost";
-        s.oauthAuthUrl = baseUrl + "auth";
-        s.oauthTokenUrl = baseUrl + "token";
+        SeleniumOauthInteraction s = new SeleniumOauthInteraction("test", "https://localhost",
+                baseUrl + "auth", baseUrl + "token");
 
-        Map<String, String> authResponse = s.fetchCode("openid", "launch/patient");
+        Map<String, String> authResponse = s.fetchCode("a", "a", "https://localhost:9443/fhir-server/api/v4",
+                "openid", "launch/patient");
         Map<String, String> tokenResponse = s.fetchToken(authResponse.get("code"));
 
         System.out.println(tokenResponse);
-    }
-
-    private String quote(String s) {
-        return "\"" + s + "\"";
     }
 }
