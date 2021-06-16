@@ -59,15 +59,11 @@ For `launch/patient` support, the Keycloak extensions for FHIR KeycloakConfigura
 
 ![A screenshot of the User Session Note mapper for the patient_id note](images/patient-id-token-mapper.png)
 
-### Building the docker images
-The docker images from this project are not yet posted to a public image repository.
-In the meantime, you may build the images yourself by:
-1. Cloning or downloading the project.
-2. Building the project via `mvn clean install -DskipTests`.
-3. Building the `alvearie/smart-keycloak` image via `docker build . -t alvearie/smart-keycloak`.
-4. Building the `alvearie/keycloak-config` image via `docker build keycloak-config -t alvearie/keycloak-config`.
-
 ### Using the docker images
+Docker images from this project are published to https://hub.docker.com/u/alvearie:
+* [alvearie/smart-keycloak](https://hub.docker.com/r/alvearie/smart-keycloak) extends the official Keycloak image with the `keycloak-extensions` and their dependencies
+* [alvearie/keycloak-config](https://hub.docker.com/r/alvearie/keycloak-config) packages the `keycloak-config` module on top of `adoptopenjdk/openjdk11-openj9:ubi` (for configuring Keycloak realms)
+
 By default, the `alvearie/smart-keycloak` image will behave identical to the Keycloak image from which it extends.
 Here is an example for running the image with a keycloak username and password of admin/admin:
 
@@ -84,7 +80,7 @@ By default, `alvearie/keycloak-config` will use the following environment variab
   * KEYCLOAK_REALM=test
   * FHIR_BASE_URL=https://localhost:9443/fhir-server/api/v4
 
-Additionally, the default keycloak-config will create a single Keycloak user in this realm with username "fhiruser" and password "change-password" (to facilitate testing).
+Additionally, the default keycloak-config image will create a single Keycloak user in this realm with username "fhiruser" and password "change-password" (to facilitate testing).
 
 It is possible to override these environment variables via the command line (using the `-e` flag), or even to pass an entirely different configuration file by specifying a docker run command. For example, to update a Keycloak server that is listening on port 8081 of the docker host with a custom configuration, you could run a command like the following:
 
@@ -104,6 +100,13 @@ See https://github.com/Alvearie/keycloak-extensions-for-fhir/tree/main/keycloak-
 | keycloak-extensions/PatientSelectionForm | A Keycloak Authenticator for narrowing the scope of a given session to the context of a single patient. |
 | keycloak-extensions/PatientPrefixUserAttributeMapper | A Keycloak OIDCProtocolMapper for adding the `Patient/` prefix to a user attribute; used to map the Patient resource id attribute into a valid `fhirUser` claim on the id_token when the `fhirUser` scope is requested. |
 | keycloak-extensions/UserAttributeMapper | A forked copy of the Keycloak User Attribute mapper that has been extended to support mapping user attributes to custom fields in the token response payload (rather than claims in the issued tokens). |
+
+## Building the docker images
+To build the docker images:
+1. Clone or download the project and navigate to the root of the project.
+2. Build the project via `mvn clean install -DskipTests`.
+3. Build the `alvearie/smart-keycloak` image via `docker build . -t alvearie/smart-keycloak`.
+4. Build the `alvearie/keycloak-config` image via `docker build keycloak-config -t alvearie/keycloak-config`.
 
 ## Contributing
 Are you using Keycloak for SMART on FHIR or other health APIs? If so, we'd love to hear from you.
