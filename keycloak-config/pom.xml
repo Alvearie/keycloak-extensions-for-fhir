@@ -5,7 +5,7 @@
   <parent>
     <groupId>org.alvearie</groupId>
     <artifactId>keycloak-extensions-parent</artifactId>
-    <version>0.0.1-SNAPSHOT</version>
+    <version>0.3.0-SNAPSHOT</version>
   </parent>
   <artifactId>keycloak-config</artifactId>
   <packaging>jar</packaging>
