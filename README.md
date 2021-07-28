@@ -20,7 +20,7 @@ Neither of these OAuth extensions are supported by Keycloak out-of-the-box and s
 
 ## Standalone app launch with `launch/patient` support
 To launch an application in the context of a single patient, an application should:
-1. Discover the authentication and token endpoints from the server's `[base]/.well-known/smart-configuration` endpoint as described at http://www.hl7.org/fhir/smart-app-launch/conformance/index.html#using-well-known.
+1. Discover the authentication and token endpoints from the FHIR server's `[base]/.well-known/smart-configuration` endpoint as described at http://www.hl7.org/fhir/smart-app-launch/conformance/index.html#using-well-known.
 2. Issue a stanard OAuth 2.0 request to the authorization endpoint with the following extensions:
     * an `aud` query parameter that is set to the base of the target FHIR server; and 
     * a set of scopes that includes the `launch/patient` scope
