@@ -470,6 +470,74 @@
 								}
 							}
 						}
+					},
+					"user/Device.read": {
+						"protocol": "openid-connect",
+						"description": "Read access to Device",
+						"attributes": {
+							"consent.screen.text": "Read access to all Device"
+						},
+						"mappers": {
+							"Audience Mapper": {
+								"protocol": "openid-connect",
+								"protocolmapper": "oidc-audience-mapper",
+								"config": {
+									"included.custom.audience": "${FHIR_BASE_URL}",
+									"access.token.claim": "true"
+								}
+							}
+						}
+					},
+					"user/Organization.read": {
+						"protocol": "openid-connect",
+						"description": "Read access to Organization",
+						"attributes": {
+							"consent.screen.text": "Read access to all Organization"
+						},
+						"mappers": {
+							"Audience Mapper": {
+								"protocol": "openid-connect",
+								"protocolmapper": "oidc-audience-mapper",
+								"config": {
+									"included.custom.audience": "${FHIR_BASE_URL}",
+									"access.token.claim": "true"
+								}
+							}
+						}
+					},
+					"user/Practitioner.read": {
+						"protocol": "openid-connect",
+						"description": "Read access to Practitioner",
+						"attributes": {
+							"consent.screen.text": "Read access to all Practitioner"
+						},
+						"mappers": {
+							"Audience Mapper": {
+								"protocol": "openid-connect",
+								"protocolmapper": "oidc-audience-mapper",
+								"config": {
+									"included.custom.audience": "${FHIR_BASE_URL}",
+									"access.token.claim": "true"
+								}
+							}
+						}
+					},
+					"user/PractitionerRole.read": {
+						"protocol": "openid-connect",
+						"description": "Read access to PractitionerRole",
+						"attributes": {
+							"consent.screen.text": "Read access to all PractitionerRole"
+						},
+						"mappers": {
+							"Audience Mapper": {
+								"protocol": "openid-connect",
+								"protocolmapper": "oidc-audience-mapper",
+								"config": {
+									"included.custom.audience": "${FHIR_BASE_URL}",
+									"access.token.claim": "true"
+								}
+							}
+						}
 					}
 				},
 				"defaultDefaultClientScopes": ["launch/patient"],
@@ -500,7 +568,11 @@
 					"patient/PractitionerRole.read",
 					"patient/Procedure.read",
 					"patient/Provenance.read",
-					"patient/RelatedPerson.read"
+					"patient/RelatedPerson.read",
+					"user/Device.read",
+					"user/Organization.read",
+					"user/Practitioner.read",
+					"user/PractitionerRole.read"
 				],
 				"clients": {
 					"inferno": {
@@ -541,7 +613,11 @@
 							"patient/PractitionerRole.read",
 							"patient/Procedure.read",
 							"patient/Provenance.read",
-							"patient/RelatedPerson.read"
+							"patient/RelatedPerson.read",
+							"user/Device.read",
+							"user/Organization.read",
+							"user/Practitioner.read",
+							"user/PractitionerRole.read"
 						]
 					}
 				},
@@ -569,7 +645,7 @@
 										}
 									},
 									"Username Password Form": {
-										"authenticator": "auth-username-password-form", 
+										"authenticator": "auth-username-password-form",
 										"requirement": "REQUIRED",
 										"priority": 20,
 										"authenticatorFlow": false
