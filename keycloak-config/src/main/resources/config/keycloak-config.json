@@ -318,6 +318,23 @@
 							}
 						}
 					},
+					"patient/MedicationDispense.read": {
+						"protocol": "openid-connect",
+						"description": "Read access to MedicationDispense",
+						"attributes": {
+							"consent.screen.text": "Read access to MedicationDispense for the patient"
+						},
+						"mappers": {
+							"Audience Mapper": {
+								"protocol": "openid-connect",
+								"protocolmapper": "oidc-audience-mapper",
+								"config": {
+									"included.custom.audience": "${FHIR_BASE_URL}",
+									"access.token.claim": "true"
+								}
+							}
+						}
+					},
 					"patient/MedicationRequest.read": {
 						"protocol": "openid-connect",
 						"description": "Read access to MedicationRequest",
@@ -560,6 +577,7 @@
 					"patient/Immunization.read",
 					"patient/Location.read",
 					"patient/Medication.read",
+					"patient/MedicationDispense.read",
 					"patient/MedicationRequest.read",
 					"patient/Observation.read",
 					"patient/Organization.read",
@@ -605,6 +623,7 @@
 							"patient/Immunization.read",
 							"patient/Location.read",
 							"patient/Medication.read",
+							"patient/MedicationDispense.read",
 							"patient/MedicationRequest.read",
 							"patient/Observation.read",
 							"patient/Organization.read",

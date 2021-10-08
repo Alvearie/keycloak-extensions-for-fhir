@@ -318,6 +318,23 @@
 							}
 						}
 					},
+					"patient/MedicationDispense.read": {
+						"protocol": "openid-connect",
+						"description": "Read access to MedicationDispense",
+						"attributes": {
+							"consent.screen.text": "Read access to MedicationDispense for the patient"
+						},
+						"mappers": {
+							"Audience Mapper": {
+								"protocol": "openid-connect",
+								"protocolmapper": "oidc-audience-mapper",
+								"config": {
+									"included.custom.audience": "${FHIR_BASE_URL}",
+									"access.token.claim": "true"
+								}
+							}
+						}
+					},
 					"patient/MedicationRequest.read": {
 						"protocol": "openid-connect",
 						"description": "Read access to MedicationRequest",
@@ -741,6 +758,20 @@
 					"system/Medication.read": {
 						"protocol": "openid-connect",
 						"description": "Read access to all Medication",
+						"mappers": {
+							"Audience Mapper": {
+								"protocol": "openid-connect",
+								"protocolmapper": "oidc-audience-mapper",
+								"config": {
+									"included.custom.audience": "${FHIR_BASE_URL}",
+									"access.token.claim": "true"
+								}
+							}
+						}
+					},
+					"system/MedicationDispense.read": {
+						"protocol": "openid-connect",
+						"description": "Read access to all MedicationDispense",
 						"mappers": {
 							"Audience Mapper": {
 								"protocol": "openid-connect",
@@ -1290,6 +1321,7 @@
 					"patient/Immunization.read",
 					"patient/Location.read",
 					"patient/Medication.read",
+					"patient/MedicationDispense.read",
 					"patient/MedicationRequest.read",
 					"patient/Observation.read",
 					"patient/Organization.read",
@@ -1335,6 +1367,7 @@
 							"patient/Immunization.read",
 							"patient/Location.read",
 							"patient/Medication.read",
+							"patient/MedicationDispense.read",
 							"patient/MedicationRequest.read",
 							"patient/Observation.read",
 							"patient/Organization.read",
@@ -1381,6 +1414,7 @@
 							"system/Immunization.read",
 							"system/Location.read",
 							"system/Medication.read",
+							"system/MedicationDispense.read",
 							"system/MedicationRequest.read",
 							"system/Observation.read",
 							"system/Organization.read",
