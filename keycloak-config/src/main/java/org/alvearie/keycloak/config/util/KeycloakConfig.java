@@ -62,6 +62,7 @@ public class KeycloakConfig {
     public static final String PROP_CLIENT_DESCRIPTION = "description";
     public static final String PROP_CLIENT_CONSENT_REQUIRED = "consentRequired";
     public static final String PROP_CLIENT_PUBLIC_CLIENT = "publicClient";
+    public static final String PROP_CLIENT_AUTHENTICATOR_TYPE = "clientAuthenticatorType";
     public static final String PROP_CLIENT_BEARER_ONLY = "bearerOnly";
     public static final String PROP_CLIENT_DIRECT_ACCESS_ENABLED = "enableDirectAccess";
     public static final String PROP_CLIENT_DEFAULT_CLIENT_SCOPES = "defaultClientScopes";
@@ -70,6 +71,12 @@ public class KeycloakConfig {
     public static final String PROP_CLIENT_REDIRECT_URIS = "redirectURIs";
     public static final String PROP_CLIENT_ADMIN_URL = "adminURL";
     public static final String PROP_CLIENT_WEB_ORIGINS = "webOrigins";
+    public static final String PROP_CLIENT_STANDARD_FLOW_ENABLED = "standardFlowEnabled";
+    public static final String PROP_CLIENT_SERVICE_ACCOUNTS_ENABLED = "serviceAccountsEnabled";
+    public static final String PROP_CLIENT_ATTRIBUTES = "attributes";
+    public static final String PROP_CLIENT_ATTR_DEVICE_AUTH_GRANT_ENABLED = "oauth2.device.authorization.grant.enabled";
+    public static final String PROP_CLIENT_ATTR_USE_JWKS_URL = "use.jwks.url";
+    public static final String PROP_CLIENT_ATTR_JWKS_URL = "jwks.url";
     public static final String PROP_AUTHENTICATION_FLOWS = "authenticationFlows";
     public static final String PROP_BROWSER_FLOW = "browserFlow";
     public static final String PROP_IDENTITY_REDIRECTOR = "identityProviderRedirector";

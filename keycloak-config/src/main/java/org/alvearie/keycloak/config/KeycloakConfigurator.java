@@ -362,7 +362,29 @@ public class KeycloakConfigurator {
         client.setName(clientPg.getStringProperty(KeycloakConfig.PROP_CLIENT_NAME));
         client.setDescription(clientPg.getStringProperty(KeycloakConfig.PROP_CLIENT_DESCRIPTION));
         client.setConsentRequired(clientPg.getBooleanProperty(KeycloakConfig.PROP_CLIENT_CONSENT_REQUIRED));
-        client.setPublicClient(clientPg.getBooleanProperty(KeycloakConfig.PROP_CLIENT_PUBLIC_CLIENT));
+        client.setStandardFlowEnabled(clientPg.getBooleanProperty(KeycloakConfig.PROP_CLIENT_STANDARD_FLOW_ENABLED, true));
+        client.setServiceAccountsEnabled(clientPg.getBooleanProperty(KeycloakConfig.PROP_CLIENT_SERVICE_ACCOUNTS_ENABLED, false));
+
+        PropertyGroup attributePg = clientPg.getPropertyGroup(KeycloakConfig.PROP_CLIENT_ATTRIBUTES);
+        if (attributePg != null) {
+            setAttribute(attributePg, client, KeycloakConfig.PROP_CLIENT_ATTR_DEVICE_AUTH_GRANT_ENABLED);
+        }
+
+        Boolean publicClient = clientPg.getBooleanProperty(KeycloakConfig.PROP_CLIENT_PUBLIC_CLIENT, false);
+        client.setPublicClient(publicClient);
+        if (!publicClient) {
+            String clientAuthType = clientPg.getStringProperty(KeycloakConfig.PROP_CLIENT_AUTHENTICATOR_TYPE);
+            client.setClientAuthenticatorType(clientAuthType);
+
+            if ("client-jwt".equals(clientAuthType)) {
+                boolean useJwksUrl = Boolean.parseBoolean(attributePg.getStringProperty(KeycloakConfig.PROP_CLIENT_ATTR_USE_JWKS_URL, "false"));
+                if (useJwksUrl) {
+                    setAttribute(attributePg, client, KeycloakConfig.PROP_CLIENT_ATTR_USE_JWKS_URL);
+                    setAttribute(attributePg, client, KeycloakConfig.PROP_CLIENT_ATTR_JWKS_URL);
+                }
+            }
+        }
+
         client.setDirectAccessGrantsEnabled(clientPg.getBooleanProperty(KeycloakConfig.PROP_CLIENT_DIRECT_ACCESS_ENABLED));
         client.setBearerOnly(clientPg.getBooleanProperty(KeycloakConfig.PROP_CLIENT_BEARER_ONLY));
         client.setRootUrl(clientPg.getStringProperty(KeycloakConfig.PROP_CLIENT_ROOT_URL));
@@ -411,6 +433,18 @@ public class KeycloakConfigurator {
                 }
             }
         }
+    }
+
+    /**
+     * Client attributes are set a little differently, so this method encapsulates the logic to get the attribute map
+     * and set a given property from a PropertyGroup that contains that attributes value in a property by the same name.
+     * @param attributesPg
+     * @param client
+     * @param propName
+     * @throws Exception
+     */
+    private void setAttribute(PropertyGroup attributesPg, ClientRepresentation client, String propName) throws Exception {
+        client.getAttributes().put(propName, attributesPg.getStringProperty(propName));
     }
 
     /**
