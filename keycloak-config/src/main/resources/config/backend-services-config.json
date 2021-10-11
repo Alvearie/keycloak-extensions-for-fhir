@@ -1,0 +1,1517 @@
+{
+	"keycloak": {
+		"serverUrl": "${KEYCLOAK_BASE_URL}",
+		"adminUser": "${KEYCLOAK_USER}",
+		"adminPassword": "${KEYCLOAK_PASSWORD}",
+		"adminClientId": "admin-cli",
+		"realms": {
+			"${KEYCLOAK_REALM}": {
+				"enabled": true,
+				"clientScopes": {
+					"fhirUser": {
+						"protocol": "openid-connect",
+						"description": "Permission to retrieve current logged-in user",
+						"attributes": {
+							"consent.screen.text": "Permission to retrieve current logged-in user"
+						},
+						"mappers": {
+							"fhirUser Mapper": {
+								"protocol": "openid-connect",
+								"protocolmapper": "oidc-patient-prefix-usermodel-attribute-mapper",
+								"config": {
+									"user.attribute": "resourceId",
+									"claim.name": "fhirUser",
+									"jsonType.label": "String",
+									"id.token.claim": "true",
+									"access.token.claim": "false",
+									"userinfo.token.claim": "true"
+								}
+							}
+						}
+					},
+					"launch/patient": {
+						"protocol": "openid-connect",
+						"description": "Used by clients to request a patient-scoped access token",
+						"attributes": {
+							"display.on.consent.screen": "false"
+						},
+						"mappers": {
+							"Patient ID Claim Mapper": {
+								"protocol": "openid-connect",
+								"protocolmapper": "oidc-usermodel-attribute-mapper",
+								"config": {
+									"user.attribute": "resourceId",
+									"claim.name": "patient_id",
+									"jsonType.label": "String",
+									"id.token.claim": "false",
+									"access.token.claim": "true",
+									"userinfo.token.claim": "false"
+								}
+							},
+							"Patient ID Token Mapper": {
+								"protocol": "openid-connect",
+								"protocolmapper": "oidc-usersessionmodel-note-mapper",
+								"config": {
+									"user.session.note": "patient_id",
+									"claim.name": "patient",
+									"jsonType.label": "String",
+									"id.token.claim": "false",
+									"access.token.claim": "false",
+									"access.tokenResponse.claim": "true"
+								}
+							},
+							"Group Membership Mapper": {
+								"protocol": "openid-connect",
+								"protocolmapper": "oidc-group-membership-mapper",
+								"config": {
+									"claim.name": "group",
+									"full.path": "false",
+									"id.token.claim": "true",
+									"access.token.claim": "true",
+									"userinfo.token.claim": "true"
+								}
+							}
+						}
+					},
+					"online_access": {
+						"protocol": "openid-connect",
+						"description": "Request a refresh_token that can be used to obtain a new access token to replace an expired one, and that will be usable for as long as the end-user remains online.",
+						"attributes": {
+							"consent.screen.text": "Retain access while you are online"
+						}
+					},
+					"patient/*.read": {
+						"protocol": "openid-connect",
+						"description": "Read access to all data",
+						"attributes": {
+							"consent.screen.text": "Read access to all data for the patient"
+						},
+						"mappers": {
+							"Audience Mapper": {
+								"protocol": "openid-connect",
+								"protocolmapper": "oidc-audience-mapper",
+								"config": {
+									"included.custom.audience": "${FHIR_BASE_URL}",
+									"access.token.claim": "true"
+								}
+							}
+						}
+					},
+					"patient/AllergyIntolerance.read": {
+						"protocol": "openid-connect",
+						"description": "Read access to AllergyIntolerance",
+						"attributes": {
+							"consent.screen.text": "Read access to AllergyIntolerance for the patient"
+						},
+						"mappers": {
+							"Audience Mapper": {
+								"protocol": "openid-connect",
+								"protocolmapper": "oidc-audience-mapper",
+								"config": {
+									"included.custom.audience": "${FHIR_BASE_URL}",
+									"access.token.claim": "true"
+								}
+							}
+						}
+					},
+					"patient/CarePlan.read": {
+						"protocol": "openid-connect",
+						"description": "Read access to CarePlan",
+						"attributes": {
+							"consent.screen.text": "Read access to CarePlan for the patient"
+						},
+						"mappers": {
+							"Audience Mapper": {
+								"protocol": "openid-connect",
+								"protocolmapper": "oidc-audience-mapper",
+								"config": {
+									"included.custom.audience": "${FHIR_BASE_URL}",
+									"access.token.claim": "true"
+								}
+							}
+						}
+					},
+					"patient/CareTeam.read": {
+						"protocol": "openid-connect",
+						"description": "Read access to CareTeam",
+						"attributes": {
+							"consent.screen.text": "Read access to CareTeam for the patient"
+						},
+						"mappers": {
+							"Audience Mapper": {
+								"protocol": "openid-connect",
+								"protocolmapper": "oidc-audience-mapper",
+								"config": {
+									"included.custom.audience": "${FHIR_BASE_URL}",
+									"access.token.claim": "true"
+								}
+							}
+						}
+					},
+					"patient/Condition.read": {
+						"protocol": "openid-connect",
+						"description": "Read access to Condition",
+						"attributes": {
+							"consent.screen.text": "Read access to Condition for the patient"
+						},
+						"mappers": {
+							"Audience Mapper": {
+								"protocol": "openid-connect",
+								"protocolmapper": "oidc-audience-mapper",
+								"config": {
+									"included.custom.audience": "${FHIR_BASE_URL}",
+									"access.token.claim": "true"
+								}
+							}
+						}
+					},
+					"patient/Device.read": {
+						"protocol": "openid-connect",
+						"description": "Read access to Device",
+						"attributes": {
+							"consent.screen.text": "Read access to Device for the patient"
+						},
+						"mappers": {
+							"Audience Mapper": {
+								"protocol": "openid-connect",
+								"protocolmapper": "oidc-audience-mapper",
+								"config": {
+									"included.custom.audience": "${FHIR_BASE_URL}",
+									"access.token.claim": "true"
+								}
+							}
+						}
+					},
+					"patient/DiagnosticReport.read": {
+						"protocol": "openid-connect",
+						"description": "Read access to DiagnosticReport",
+						"attributes": {
+							"consent.screen.text": "Read access to DiagnosticReport for the patient"
+						},
+						"mappers": {
+							"Audience Mapper": {
+								"protocol": "openid-connect",
+								"protocolmapper": "oidc-audience-mapper",
+								"config": {
+									"included.custom.audience": "${FHIR_BASE_URL}",
+									"access.token.claim": "true"
+								}
+							}
+						}
+					},
+					"patient/DocumentReference.read": {
+						"protocol": "openid-connect",
+						"description": "Read access to DocumentReference",
+						"attributes": {
+							"consent.screen.text": "Read access to DocumentReference for the patient"
+						},
+						"mappers": {
+							"Audience Mapper": {
+								"protocol": "openid-connect",
+								"protocolmapper": "oidc-audience-mapper",
+								"config": {
+									"included.custom.audience": "${FHIR_BASE_URL}",
+									"access.token.claim": "true"
+								}
+							}
+						}
+					},
+					"patient/Encounter.read": {
+						"protocol": "openid-connect",
+						"description": "Read access to Encounter",
+						"attributes": {
+							"consent.screen.text": "Read access to Encounter for the patient"
+						},
+						"mappers": {
+							"Audience Mapper": {
+								"protocol": "openid-connect",
+								"protocolmapper": "oidc-audience-mapper",
+								"config": {
+									"included.custom.audience": "${FHIR_BASE_URL}",
+									"access.token.claim": "true"
+								}
+							}
+						}
+					},
+					"patient/ExplanationOfBenefit.read": {
+						"protocol": "openid-connect",
+						"description": "Read access to ExplanationOfBenefit",
+						"attributes": {
+							"consent.screen.text": "Read access to ExplanationOfBenefit for the patient"
+						},
+						"mappers": {
+							"Audience Mapper": {
+								"protocol": "openid-connect",
+								"protocolmapper": "oidc-audience-mapper",
+								"config": {
+									"included.custom.audience": "${FHIR_BASE_URL}",
+									"access.token.claim": "true"
+								}
+							}
+						}
+					},
+					"patient/Goal.read": {
+						"protocol": "openid-connect",
+						"description": "Read access to Goal",
+						"attributes": {
+							"consent.screen.text": "Read access to Goal for the patient"
+						},
+						"mappers": {
+							"Audience Mapper": {
+								"protocol": "openid-connect",
+								"protocolmapper": "oidc-audience-mapper",
+								"config": {
+									"included.custom.audience": "${FHIR_BASE_URL}",
+									"access.token.claim": "true"
+								}
+							}
+						}
+					},
+					"patient/Immunization.read": {
+						"protocol": "openid-connect",
+						"description": "Read access to Immunization",
+						"attributes": {
+							"consent.screen.text": "Read access to Immunization for the patient"
+						},
+						"mappers": {
+							"Audience Mapper": {
+								"protocol": "openid-connect",
+								"protocolmapper": "oidc-audience-mapper",
+								"config": {
+									"included.custom.audience": "${FHIR_BASE_URL}",
+									"access.token.claim": "true"
+								}
+							}
+						}
+					},
+					"patient/Location.read": {
+						"protocol": "openid-connect",
+						"description": "Read access to Location",
+						"attributes": {
+							"consent.screen.text": "Read access to Location for the patient"
+						},
+						"mappers": {
+							"Audience Mapper": {
+								"protocol": "openid-connect",
+								"protocolmapper": "oidc-audience-mapper",
+								"config": {
+									"included.custom.audience": "${FHIR_BASE_URL}",
+									"access.token.claim": "true"
+								}
+							}
+						}
+					},
+					"patient/Medication.read": {
+						"protocol": "openid-connect",
+						"description": "Read access to Medication",
+						"attributes": {
+							"consent.screen.text": "Read access to Medication for the patient"
+						},
+						"mappers": {
+							"Audience Mapper": {
+								"protocol": "openid-connect",
+								"protocolmapper": "oidc-audience-mapper",
+								"config": {
+									"included.custom.audience": "${FHIR_BASE_URL}",
+									"access.token.claim": "true"
+								}
+							}
+						}
+					},
+					"patient/MedicationDispense.read": {
+						"protocol": "openid-connect",
+						"description": "Read access to MedicationDispense",
+						"attributes": {
+							"consent.screen.text": "Read access to MedicationDispense for the patient"
+						},
+						"mappers": {
+							"Audience Mapper": {
+								"protocol": "openid-connect",
+								"protocolmapper": "oidc-audience-mapper",
+								"config": {
+									"included.custom.audience": "${FHIR_BASE_URL}",
+									"access.token.claim": "true"
+								}
+							}
+						}
+					},
+					"patient/MedicationRequest.read": {
+						"protocol": "openid-connect",
+						"description": "Read access to MedicationRequest",
+						"attributes": {
+							"consent.screen.text": "Read access to MedicationRequest for the patient"
+						},
+						"mappers": {
+							"Audience Mapper": {
+								"protocol": "openid-connect",
+								"protocolmapper": "oidc-audience-mapper",
+								"config": {
+									"included.custom.audience": "${FHIR_BASE_URL}",
+									"access.token.claim": "true"
+								}
+							}
+						}
+					},
+					"patient/Observation.read": {
+						"protocol": "openid-connect",
+						"description": "Read access to Observation",
+						"attributes": {
+							"consent.screen.text": "Read access to Observation for the patient"
+						},
+						"mappers": {
+							"Audience Mapper": {
+								"protocol": "openid-connect",
+								"protocolmapper": "oidc-audience-mapper",
+								"config": {
+									"included.custom.audience": "${FHIR_BASE_URL}",
+									"access.token.claim": "true"
+								}
+							}
+						}
+					},
+					"patient/Organization.read": {
+						"protocol": "openid-connect",
+						"description": "Read access to Organization",
+						"attributes": {
+							"consent.screen.text": "Read access to Organization for the patient"
+						},
+						"mappers": {
+							"Audience Mapper": {
+								"protocol": "openid-connect",
+								"protocolmapper": "oidc-audience-mapper",
+								"config": {
+									"included.custom.audience": "${FHIR_BASE_URL}",
+									"access.token.claim": "true"
+								}
+							}
+						}
+					},
+					"patient/Patient.read": {
+						"protocol": "openid-connect",
+						"description": "Read access to Patient",
+						"attributes": {
+							"consent.screen.text": "Read access to Patient for the patient"
+						},
+						"mappers": {
+							"Audience Mapper": {
+								"protocol": "openid-connect",
+								"protocolmapper": "oidc-audience-mapper",
+								"config": {
+									"included.custom.audience": "${FHIR_BASE_URL}",
+									"access.token.claim": "true"
+								}
+							}
+						}
+					},
+					"patient/Practitioner.read": {
+						"protocol": "openid-connect",
+						"description": "Read access to Practitioner",
+						"attributes": {
+							"consent.screen.text": "Read access to Practitioner for the patient"
+						},
+						"mappers": {
+							"Audience Mapper": {
+								"protocol": "openid-connect",
+								"protocolmapper": "oidc-audience-mapper",
+								"config": {
+									"included.custom.audience": "${FHIR_BASE_URL}",
+									"access.token.claim": "true"
+								}
+							}
+						}
+					},
+					"patient/PractitionerRole.read": {
+						"protocol": "openid-connect",
+						"description": "Read access to PractitionerRole",
+						"attributes": {
+							"consent.screen.text": "Read access to PractitionerRole for the patient"
+						},
+						"mappers": {
+							"Audience Mapper": {
+								"protocol": "openid-connect",
+								"protocolmapper": "oidc-audience-mapper",
+								"config": {
+									"included.custom.audience": "${FHIR_BASE_URL}",
+									"access.token.claim": "true"
+								}
+							}
+						}
+					},
+					"patient/Procedure.read": {
+						"protocol": "openid-connect",
+						"description": "Read access to Procedure",
+						"attributes": {
+							"consent.screen.text": "Read access to Procedure for the patient"
+						},
+						"mappers": {
+							"Audience Mapper": {
+								"protocol": "openid-connect",
+								"protocolmapper": "oidc-audience-mapper",
+								"config": {
+									"included.custom.audience": "${FHIR_BASE_URL}",
+									"access.token.claim": "true"
+								}
+							}
+						}
+					},
+					"patient/Provenance.read": {
+						"protocol": "openid-connect",
+						"description": "Read access to Provenance",
+						"attributes": {
+							"consent.screen.text": "Read access to Provenance for the patient"
+						},
+						"mappers": {
+							"Audience Mapper": {
+								"protocol": "openid-connect",
+								"protocolmapper": "oidc-audience-mapper",
+								"config": {
+									"included.custom.audience": "${FHIR_BASE_URL}",
+									"access.token.claim": "true"
+								}
+							}
+						}
+					},
+					"patient/RelatedPerson.read": {
+						"protocol": "openid-connect",
+						"description": "Read access to RelatedPerson",
+						"attributes": {
+							"consent.screen.text": "Read access to RelatedPerson for the patient"
+						},
+						"mappers": {
+							"Audience Mapper": {
+								"protocol": "openid-connect",
+								"protocolmapper": "oidc-audience-mapper",
+								"config": {
+									"included.custom.audience": "${FHIR_BASE_URL}",
+									"access.token.claim": "true"
+								}
+							}
+						}
+					},
+					"user/*.read": {
+						"protocol": "openid-connect",
+						"description": "Read access to all data",
+						"attributes": {
+							"consent.screen.text": "Read access to all data"
+						},
+						"mappers": {
+							"Audience Mapper": {
+								"protocol": "openid-connect",
+								"protocolmapper": "oidc-audience-mapper",
+								"config": {
+									"included.custom.audience": "${FHIR_BASE_URL}",
+									"access.token.claim": "true"
+								}
+							}
+						}
+					},
+					"user/Device.read": {
+						"protocol": "openid-connect",
+						"description": "Read access to Device",
+						"attributes": {
+							"consent.screen.text": "Read access to all Device"
+						},
+						"mappers": {
+							"Audience Mapper": {
+								"protocol": "openid-connect",
+								"protocolmapper": "oidc-audience-mapper",
+								"config": {
+									"included.custom.audience": "${FHIR_BASE_URL}",
+									"access.token.claim": "true"
+								}
+							}
+						}
+					},
+					"user/Organization.read": {
+						"protocol": "openid-connect",
+						"description": "Read access to Organization",
+						"attributes": {
+							"consent.screen.text": "Read access to all Organization"
+						},
+						"mappers": {
+							"Audience Mapper": {
+								"protocol": "openid-connect",
+								"protocolmapper": "oidc-audience-mapper",
+								"config": {
+									"included.custom.audience": "${FHIR_BASE_URL}",
+									"access.token.claim": "true"
+								}
+							}
+						}
+					},
+					"user/Practitioner.read": {
+						"protocol": "openid-connect",
+						"description": "Read access to Practitioner",
+						"attributes": {
+							"consent.screen.text": "Read access to all Practitioner"
+						},
+						"mappers": {
+							"Audience Mapper": {
+								"protocol": "openid-connect",
+								"protocolmapper": "oidc-audience-mapper",
+								"config": {
+									"included.custom.audience": "${FHIR_BASE_URL}",
+									"access.token.claim": "true"
+								}
+							}
+						}
+					},
+					"user/PractitionerRole.read": {
+						"protocol": "openid-connect",
+						"description": "Read access to PractitionerRole",
+						"attributes": {
+							"consent.screen.text": "Read access to all PractitionerRole"
+						},
+						"mappers": {
+							"Audience Mapper": {
+								"protocol": "openid-connect",
+								"protocolmapper": "oidc-audience-mapper",
+								"config": {
+									"included.custom.audience": "${FHIR_BASE_URL}",
+									"access.token.claim": "true"
+								}
+							}
+						}
+					},
+					"system/*.read": {
+						"protocol": "openid-connect",
+						"description": "Read access to all data",
+						"mappers": {
+							"Audience Mapper": {
+								"protocol": "openid-connect",
+								"protocolmapper": "oidc-audience-mapper",
+								"config": {
+									"included.custom.audience": "${FHIR_BASE_URL}",
+									"access.token.claim": "true"
+								}
+							}
+						}
+					},
+					"system/AllergyIntolerance.read": {
+						"protocol": "openid-connect",
+						"description": "Read access to all AllergyIntolerance",
+						"mappers": {
+							"Audience Mapper": {
+								"protocol": "openid-connect",
+								"protocolmapper": "oidc-audience-mapper",
+								"config": {
+									"included.custom.audience": "${FHIR_BASE_URL}",
+									"access.token.claim": "true"
+								}
+							}
+						}
+					},
+					"system/CarePlan.read": {
+						"protocol": "openid-connect",
+						"description": "Read access to all CarePlan",
+						"mappers": {
+							"Audience Mapper": {
+								"protocol": "openid-connect",
+								"protocolmapper": "oidc-audience-mapper",
+								"config": {
+									"included.custom.audience": "${FHIR_BASE_URL}",
+									"access.token.claim": "true"
+								}
+							}
+						}
+					},
+					"system/CareTeam.read": {
+						"protocol": "openid-connect",
+						"description": "Read access to all CareTeam",
+						"mappers": {
+							"Audience Mapper": {
+								"protocol": "openid-connect",
+								"protocolmapper": "oidc-audience-mapper",
+								"config": {
+									"included.custom.audience": "${FHIR_BASE_URL}",
+									"access.token.claim": "true"
+								}
+							}
+						}
+					},
+					"system/Condition.read": {
+						"protocol": "openid-connect",
+						"description": "Read access to all Condition",
+						"mappers": {
+							"Audience Mapper": {
+								"protocol": "openid-connect",
+								"protocolmapper": "oidc-audience-mapper",
+								"config": {
+									"included.custom.audience": "${FHIR_BASE_URL}",
+									"access.token.claim": "true"
+								}
+							}
+						}
+					},
+					"system/Device.read": {
+						"protocol": "openid-connect",
+						"description": "Read access to all Device",
+						"mappers": {
+							"Audience Mapper": {
+								"protocol": "openid-connect",
+								"protocolmapper": "oidc-audience-mapper",
+								"config": {
+									"included.custom.audience": "${FHIR_BASE_URL}",
+									"access.token.claim": "true"
+								}
+							}
+						}
+					},
+					"system/DiagnosticReport.read": {
+						"protocol": "openid-connect",
+						"description": "Read access to all DiagnosticReport",
+						"mappers": {
+							"Audience Mapper": {
+								"protocol": "openid-connect",
+								"protocolmapper": "oidc-audience-mapper",
+								"config": {
+									"included.custom.audience": "${FHIR_BASE_URL}",
+									"access.token.claim": "true"
+								}
+							}
+						}
+					},
+					"system/DocumentReference.read": {
+						"protocol": "openid-connect",
+						"description": "Read access to all DocumentReference",
+						"mappers": {
+							"Audience Mapper": {
+								"protocol": "openid-connect",
+								"protocolmapper": "oidc-audience-mapper",
+								"config": {
+									"included.custom.audience": "${FHIR_BASE_URL}",
+									"access.token.claim": "true"
+								}
+							}
+						}
+					},
+					"system/Encounter.read": {
+						"protocol": "openid-connect",
+						"description": "Read access to all Encounter",
+						"mappers": {
+							"Audience Mapper": {
+								"protocol": "openid-connect",
+								"protocolmapper": "oidc-audience-mapper",
+								"config": {
+									"included.custom.audience": "${FHIR_BASE_URL}",
+									"access.token.claim": "true"
+								}
+							}
+						}
+					},
+					"system/ExplanationOfBenefit.read": {
+						"protocol": "openid-connect",
+						"description": "Read access to all ExplanationOfBenefit",
+						"mappers": {
+							"Audience Mapper": {
+								"protocol": "openid-connect",
+								"protocolmapper": "oidc-audience-mapper",
+								"config": {
+									"included.custom.audience": "${FHIR_BASE_URL}",
+									"access.token.claim": "true"
+								}
+							}
+						}
+					},
+					"system/Goal.read": {
+						"protocol": "openid-connect",
+						"description": "Read access to all Goal",
+						"mappers": {
+							"Audience Mapper": {
+								"protocol": "openid-connect",
+								"protocolmapper": "oidc-audience-mapper",
+								"config": {
+									"included.custom.audience": "${FHIR_BASE_URL}",
+									"access.token.claim": "true"
+								}
+							}
+						}
+					},
+					"system/Immunization.read": {
+						"protocol": "openid-connect",
+						"description": "Read access to all Immunization",
+						"mappers": {
+							"Audience Mapper": {
+								"protocol": "openid-connect",
+								"protocolmapper": "oidc-audience-mapper",
+								"config": {
+									"included.custom.audience": "${FHIR_BASE_URL}",
+									"access.token.claim": "true"
+								}
+							}
+						}
+					},
+					"system/Location.read": {
+						"protocol": "openid-connect",
+						"description": "Read access to all Location",
+						"mappers": {
+							"Audience Mapper": {
+								"protocol": "openid-connect",
+								"protocolmapper": "oidc-audience-mapper",
+								"config": {
+									"included.custom.audience": "${FHIR_BASE_URL}",
+									"access.token.claim": "true"
+								}
+							}
+						}
+					},
+					"system/Medication.read": {
+						"protocol": "openid-connect",
+						"description": "Read access to all Medication",
+						"mappers": {
+							"Audience Mapper": {
+								"protocol": "openid-connect",
+								"protocolmapper": "oidc-audience-mapper",
+								"config": {
+									"included.custom.audience": "${FHIR_BASE_URL}",
+									"access.token.claim": "true"
+								}
+							}
+						}
+					},
+					"system/MedicationDispense.read": {
+						"protocol": "openid-connect",
+						"description": "Read access to all MedicationDispense",
+						"mappers": {
+							"Audience Mapper": {
+								"protocol": "openid-connect",
+								"protocolmapper": "oidc-audience-mapper",
+								"config": {
+									"included.custom.audience": "${FHIR_BASE_URL}",
+									"access.token.claim": "true"
+								}
+							}
+						}
+					},
+					"system/MedicationRequest.read": {
+						"protocol": "openid-connect",
+						"description": "Read access to all MedicationRequest",
+						"mappers": {
+							"Audience Mapper": {
+								"protocol": "openid-connect",
+								"protocolmapper": "oidc-audience-mapper",
+								"config": {
+									"included.custom.audience": "${FHIR_BASE_URL}",
+									"access.token.claim": "true"
+								}
+							}
+						}
+					},
+					"system/Observation.read": {
+						"protocol": "openid-connect",
+						"description": "Read access to all Observation",
+						"mappers": {
+							"Audience Mapper": {
+								"protocol": "openid-connect",
+								"protocolmapper": "oidc-audience-mapper",
+								"config": {
+									"included.custom.audience": "${FHIR_BASE_URL}",
+									"access.token.claim": "true"
+								}
+							}
+						}
+					},
+					"system/Organization.read": {
+						"protocol": "openid-connect",
+						"description": "Read access to all Organization",
+						"mappers": {
+							"Audience Mapper": {
+								"protocol": "openid-connect",
+								"protocolmapper": "oidc-audience-mapper",
+								"config": {
+									"included.custom.audience": "${FHIR_BASE_URL}",
+									"access.token.claim": "true"
+								}
+							}
+						}
+					},
+					"system/Patient.read": {
+						"protocol": "openid-connect",
+						"description": "Read access to all Patient",
+						"mappers": {
+							"Audience Mapper": {
+								"protocol": "openid-connect",
+								"protocolmapper": "oidc-audience-mapper",
+								"config": {
+									"included.custom.audience": "${FHIR_BASE_URL}",
+									"access.token.claim": "true"
+								}
+							}
+						}
+					},
+					"system/Practitioner.read": {
+						"protocol": "openid-connect",
+						"description": "Read access to all Practitioner",
+						"mappers": {
+							"Audience Mapper": {
+								"protocol": "openid-connect",
+								"protocolmapper": "oidc-audience-mapper",
+								"config": {
+									"included.custom.audience": "${FHIR_BASE_URL}",
+									"access.token.claim": "true"
+								}
+							}
+						}
+					},
+					"system/PractitionerRole.read": {
+						"protocol": "openid-connect",
+						"description": "Read access to all PractitionerRole",
+						"mappers": {
+							"Audience Mapper": {
+								"protocol": "openid-connect",
+								"protocolmapper": "oidc-audience-mapper",
+								"config": {
+									"included.custom.audience": "${FHIR_BASE_URL}",
+									"access.token.claim": "true"
+								}
+							}
+						}
+					},
+					"system/Procedure.read": {
+						"protocol": "openid-connect",
+						"description": "Read access to all Procedure",
+						"mappers": {
+							"Audience Mapper": {
+								"protocol": "openid-connect",
+								"protocolmapper": "oidc-audience-mapper",
+								"config": {
+									"included.custom.audience": "${FHIR_BASE_URL}",
+									"access.token.claim": "true"
+								}
+							}
+						}
+					},
+					"system/Provenance.read": {
+						"protocol": "openid-connect",
+						"description": "Read access to all Provenance",
+						"mappers": {
+							"Audience Mapper": {
+								"protocol": "openid-connect",
+								"protocolmapper": "oidc-audience-mapper",
+								"config": {
+									"included.custom.audience": "${FHIR_BASE_URL}",
+									"access.token.claim": "true"
+								}
+							}
+						}
+					},
+					"system/RelatedPerson.read": {
+						"protocol": "openid-connect",
+						"description": "Read access to all RelatedPerson",
+						"mappers": {
+							"Audience Mapper": {
+								"protocol": "openid-connect",
+								"protocolmapper": "oidc-audience-mapper",
+								"config": {
+									"included.custom.audience": "${FHIR_BASE_URL}",
+									"access.token.claim": "true"
+								}
+							}
+						}
+					},
+					"system/*.*": {
+						"protocol": "openid-connect",
+						"description": "Read and write access to all data",
+						"attributes": {
+							"include.in.token.scope": "false"
+						},
+						"mappers": {
+							"Audience Mapper": {
+								"protocol": "openid-connect",
+								"protocolmapper": "oidc-audience-mapper",
+								"config": {
+									"included.custom.audience": "${FHIR_BASE_URL}",
+									"access.token.claim": "true"
+								}
+							}
+						}
+					},
+					"system/AllergyIntolerance.*": {
+						"protocol": "openid-connect",
+						"description": "Read and write access to all AllergyIntolerance",
+						"attributes": {
+							"include.in.token.scope": "false"
+						},
+						"mappers": {
+							"Audience Mapper": {
+								"protocol": "openid-connect",
+								"protocolmapper": "oidc-audience-mapper",
+								"config": {
+									"included.custom.audience": "${FHIR_BASE_URL}",
+									"access.token.claim": "true"
+								}
+							}
+						}
+					},
+					"system/CarePlan.*": {
+						"protocol": "openid-connect",
+						"description": "Read and write access to all CarePlan",
+						"attributes": {
+							"include.in.token.scope": "false"
+						},
+						"mappers": {
+							"Audience Mapper": {
+								"protocol": "openid-connect",
+								"protocolmapper": "oidc-audience-mapper",
+								"config": {
+									"included.custom.audience": "${FHIR_BASE_URL}",
+									"access.token.claim": "true"
+								}
+							}
+						}
+					},
+					"system/CareTeam.*": {
+						"protocol": "openid-connect",
+						"description": "Read and write access to all CareTeam",
+						"attributes": {
+							"include.in.token.scope": "false"
+						},
+						"mappers": {
+							"Audience Mapper": {
+								"protocol": "openid-connect",
+								"protocolmapper": "oidc-audience-mapper",
+								"config": {
+									"included.custom.audience": "${FHIR_BASE_URL}",
+									"access.token.claim": "true"
+								}
+							}
+						}
+					},
+					"system/Condition.*": {
+						"protocol": "openid-connect",
+						"description": "Read and write access to all Condition",
+						"attributes": {
+							"include.in.token.scope": "false"
+						},
+						"mappers": {
+							"Audience Mapper": {
+								"protocol": "openid-connect",
+								"protocolmapper": "oidc-audience-mapper",
+								"config": {
+									"included.custom.audience": "${FHIR_BASE_URL}",
+									"access.token.claim": "true"
+								}
+							}
+						}
+					},
+					"system/Device.*": {
+						"protocol": "openid-connect",
+						"description": "Read and write access to all Device",
+						"attributes": {
+							"include.in.token.scope": "false"
+						},
+						"mappers": {
+							"Audience Mapper": {
+								"protocol": "openid-connect",
+								"protocolmapper": "oidc-audience-mapper",
+								"config": {
+									"included.custom.audience": "${FHIR_BASE_URL}",
+									"access.token.claim": "true"
+								}
+							}
+						}
+					},
+					"system/DiagnosticReport.*": {
+						"protocol": "openid-connect",
+						"description": "Read and write access to all DiagnosticReport",
+						"attributes": {
+							"include.in.token.scope": "false"
+						},
+						"mappers": {
+							"Audience Mapper": {
+								"protocol": "openid-connect",
+								"protocolmapper": "oidc-audience-mapper",
+								"config": {
+									"included.custom.audience": "${FHIR_BASE_URL}",
+									"access.token.claim": "true"
+								}
+							}
+						}
+					},
+					"system/DocumentReference.*": {
+						"protocol": "openid-connect",
+						"description": "Read and write access to all DocumentReference",
+						"attributes": {
+							"include.in.token.scope": "false"
+						},
+						"mappers": {
+							"Audience Mapper": {
+								"protocol": "openid-connect",
+								"protocolmapper": "oidc-audience-mapper",
+								"config": {
+									"included.custom.audience": "${FHIR_BASE_URL}",
+									"access.token.claim": "true"
+								}
+							}
+						}
+					},
+					"system/Encounter.*": {
+						"protocol": "openid-connect",
+						"description": "Read and write access to all Encounter",
+						"attributes": {
+							"include.in.token.scope": "false"
+						},
+						"mappers": {
+							"Audience Mapper": {
+								"protocol": "openid-connect",
+								"protocolmapper": "oidc-audience-mapper",
+								"config": {
+									"included.custom.audience": "${FHIR_BASE_URL}",
+									"access.token.claim": "true"
+								}
+							}
+						}
+					},
+					"system/ExplanationOfBenefit.*": {
+						"protocol": "openid-connect",
+						"description": "Read and write access to all ExplanationOfBenefit",
+						"attributes": {
+							"include.in.token.scope": "false"
+						},
+						"mappers": {
+							"Audience Mapper": {
+								"protocol": "openid-connect",
+								"protocolmapper": "oidc-audience-mapper",
+								"config": {
+									"included.custom.audience": "${FHIR_BASE_URL}",
+									"access.token.claim": "true"
+								}
+							}
+						}
+					},
+					"system/Goal.*": {
+						"protocol": "openid-connect",
+						"description": "Read and write access to all Goal",
+						"attributes": {
+							"include.in.token.scope": "false"
+						},
+						"mappers": {
+							"Audience Mapper": {
+								"protocol": "openid-connect",
+								"protocolmapper": "oidc-audience-mapper",
+								"config": {
+									"included.custom.audience": "${FHIR_BASE_URL}",
+									"access.token.claim": "true"
+								}
+							}
+						}
+					},
+					"system/Immunization.*": {
+						"protocol": "openid-connect",
+						"description": "Read and write access to all Immunization",
+						"attributes": {
+							"include.in.token.scope": "false"
+						},
+						"mappers": {
+							"Audience Mapper": {
+								"protocol": "openid-connect",
+								"protocolmapper": "oidc-audience-mapper",
+								"config": {
+									"included.custom.audience": "${FHIR_BASE_URL}",
+									"access.token.claim": "true"
+								}
+							}
+						}
+					},
+					"system/Location.*": {
+						"protocol": "openid-connect",
+						"description": "Read and write access to all Location",
+						"attributes": {
+							"include.in.token.scope": "false"
+						},
+						"mappers": {
+							"Audience Mapper": {
+								"protocol": "openid-connect",
+								"protocolmapper": "oidc-audience-mapper",
+								"config": {
+									"included.custom.audience": "${FHIR_BASE_URL}",
+									"access.token.claim": "true"
+								}
+							}
+						}
+					},
+					"system/Medication.*": {
+						"protocol": "openid-connect",
+						"description": "Read and write access to all Medication",
+						"attributes": {
+							"include.in.token.scope": "false"
+						},
+						"mappers": {
+							"Audience Mapper": {
+								"protocol": "openid-connect",
+								"protocolmapper": "oidc-audience-mapper",
+								"config": {
+									"included.custom.audience": "${FHIR_BASE_URL}",
+									"access.token.claim": "true"
+								}
+							}
+						}
+					},
+					"system/MedicationRequest.*": {
+						"protocol": "openid-connect",
+						"description": "Read and write access to all MedicationRequest",
+						"attributes": {
+							"include.in.token.scope": "false"
+						},
+						"mappers": {
+							"Audience Mapper": {
+								"protocol": "openid-connect",
+								"protocolmapper": "oidc-audience-mapper",
+								"config": {
+									"included.custom.audience": "${FHIR_BASE_URL}",
+									"access.token.claim": "true"
+								}
+							}
+						}
+					},
+					"system/Observation.*": {
+						"protocol": "openid-connect",
+						"description": "Read and write access to all Observation",
+						"attributes": {
+							"include.in.token.scope": "false"
+						},
+						"mappers": {
+							"Audience Mapper": {
+								"protocol": "openid-connect",
+								"protocolmapper": "oidc-audience-mapper",
+								"config": {
+									"included.custom.audience": "${FHIR_BASE_URL}",
+									"access.token.claim": "true"
+								}
+							}
+						}
+					},
+					"system/Organization.*": {
+						"protocol": "openid-connect",
+						"description": "Read and write access to all Organization",
+						"attributes": {
+							"include.in.token.scope": "false"
+						},
+						"mappers": {
+							"Audience Mapper": {
+								"protocol": "openid-connect",
+								"protocolmapper": "oidc-audience-mapper",
+								"config": {
+									"included.custom.audience": "${FHIR_BASE_URL}",
+									"access.token.claim": "true"
+								}
+							}
+						}
+					},
+					"system/Patient.*": {
+						"protocol": "openid-connect",
+						"description": "Read and write access to all Patient",
+						"attributes": {
+							"include.in.token.scope": "false"
+						},
+						"mappers": {
+							"Audience Mapper": {
+								"protocol": "openid-connect",
+								"protocolmapper": "oidc-audience-mapper",
+								"config": {
+									"included.custom.audience": "${FHIR_BASE_URL}",
+									"access.token.claim": "true"
+								}
+							}
+						}
+					},
+					"system/Practitioner.*": {
+						"protocol": "openid-connect",
+						"description": "Read and write access to all Practitioner",
+						"attributes": {
+							"include.in.token.scope": "false"
+						},
+						"mappers": {
+							"Audience Mapper": {
+								"protocol": "openid-connect",
+								"protocolmapper": "oidc-audience-mapper",
+								"config": {
+									"included.custom.audience": "${FHIR_BASE_URL}",
+									"access.token.claim": "true"
+								}
+							}
+						}
+					},
+					"system/PractitionerRole.*": {
+						"protocol": "openid-connect",
+						"description": "Read and write access to all PractitionerRole",
+						"attributes": {
+							"include.in.token.scope": "false"
+						},
+						"mappers": {
+							"Audience Mapper": {
+								"protocol": "openid-connect",
+								"protocolmapper": "oidc-audience-mapper",
+								"config": {
+									"included.custom.audience": "${FHIR_BASE_URL}",
+									"access.token.claim": "true"
+								}
+							}
+						}
+					},
+					"system/Procedure.*": {
+						"protocol": "openid-connect",
+						"description": "Read and write access to all Procedure",
+						"attributes": {
+							"include.in.token.scope": "false"
+						},
+						"mappers": {
+							"Audience Mapper": {
+								"protocol": "openid-connect",
+								"protocolmapper": "oidc-audience-mapper",
+								"config": {
+									"included.custom.audience": "${FHIR_BASE_URL}",
+									"access.token.claim": "true"
+								}
+							}
+						}
+					},
+					"system/Provenance.*": {
+						"protocol": "openid-connect",
+						"description": "Read and write access to all Provenance",
+						"attributes": {
+							"include.in.token.scope": "false"
+						},
+						"mappers": {
+							"Audience Mapper": {
+								"protocol": "openid-connect",
+								"protocolmapper": "oidc-audience-mapper",
+								"config": {
+									"included.custom.audience": "${FHIR_BASE_URL}",
+									"access.token.claim": "true"
+								}
+							}
+						}
+					},
+					"system/RelatedPerson.*": {
+						"protocol": "openid-connect",
+						"description": "Read and write access to all RelatedPerson",
+						"attributes": {
+							"include.in.token.scope": "false"
+						},
+						"mappers": {
+							"Audience Mapper": {
+								"protocol": "openid-connect",
+								"protocolmapper": "oidc-audience-mapper",
+								"config": {
+									"included.custom.audience": "${FHIR_BASE_URL}",
+									"access.token.claim": "true"
+								}
+							}
+						}
+					}
+				},
+				"defaultDefaultClientScopes": ["launch/patient"],
+				"defaultOptionalClientScopes": [
+					"fhirUser",
+					"offline_access",
+					"online_access",
+					"profile",
+					"patient/*.read",
+					"patient/AllergyIntolerance.read",
+					"patient/CarePlan.read",
+					"patient/CareTeam.read",
+					"patient/Condition.read",
+					"patient/Device.read",
+					"patient/DiagnosticReport.read",
+					"patient/DocumentReference.read",
+					"patient/Encounter.read",
+					"patient/ExplanationOfBenefit.read",
+					"patient/Goal.read",
+					"patient/Immunization.read",
+					"patient/Location.read",
+					"patient/Medication.read",
+					"patient/MedicationDispense.read",
+					"patient/MedicationRequest.read",
+					"patient/Observation.read",
+					"patient/Organization.read",
+					"patient/Patient.read",
+					"patient/Practitioner.read",
+					"patient/PractitionerRole.read",
+					"patient/Procedure.read",
+					"patient/Provenance.read",
+					"patient/RelatedPerson.read",
+					"user/Device.read",
+					"user/Organization.read",
+					"user/Practitioner.read",
+					"user/PractitionerRole.read"
+				],
+				"clients": {
+					"inferno": {
+						"consentRequired": true,
+						"publicClient": true,
+						"bearerOnly": false,
+						"enableDirectAccess": false,
+						"rootURL": "http://localhost:4567/inferno",
+						"redirectURIs": ["http://localhost:4567/inferno/*",
+						"http://localhost:4567/inferno/*"],
+						"adminURL": "http://localhost:4567/inferno",
+						"webOrigins": ["http://localhost:4567"],
+						"defaultClientScopes": ["launch/patient"],
+						"optionalClientScopes": [
+							"fhirUser",
+							"offline_access",
+							"online_access",
+							"profile",
+							"patient/*.read",
+							"patient/AllergyIntolerance.read",
+							"patient/CarePlan.read",
+							"patient/CareTeam.read",
+							"patient/Condition.read",
+							"patient/Device.read",
+							"patient/DiagnosticReport.read",
+							"patient/DocumentReference.read",
+							"patient/Encounter.read",
+							"patient/ExplanationOfBenefit.read",
+							"patient/Goal.read",
+							"patient/Immunization.read",
+							"patient/Location.read",
+							"patient/Medication.read",
+							"patient/MedicationDispense.read",
+							"patient/MedicationRequest.read",
+							"patient/Observation.read",
+							"patient/Organization.read",
+							"patient/Patient.read",
+							"patient/Practitioner.read",
+							"patient/PractitionerRole.read",
+							"patient/Procedure.read",
+							"patient/Provenance.read",
+							"patient/RelatedPerson.read",
+							"user/Device.read",
+							"user/Organization.read",
+							"user/Practitioner.read",
+							"user/PractitionerRole.read"
+						]
+					},
+					"infernoBulk": {
+						"consentRequired": false,
+						"publicClient": false,
+						"standardFlowEnabled": false,
+						"serviceAccountsEnabled": true,
+						"clientAuthenticatorType": "client-jwt",
+						"attributes": {
+							"oauth2.device.authorization.grant.enabled": "true",
+							"use.jwks.url": "true",
+							"jwks.url": "http://apache/inferno.public.json"
+						},
+						"rootURL": "http://localhost:4567/inferno",
+						"redirectURIs": ["http://localhost:4567/inferno/*",
+						"http://localhost:4567/inferno2/*"],
+						"adminURL": "http://localhost:4567/inferno",
+						"webOrigins": ["http://localhost:4567"],
+						"defaultClientScopes": ["system/*.read"],
+						"optionalClientScopes": [
+							"system/AllergyIntolerance.read",
+							"system/CarePlan.read",
+							"system/CareTeam.read",
+							"system/Condition.read",
+							"system/Device.read",
+							"system/DiagnosticReport.read",
+							"system/DocumentReference.read",
+							"system/Encounter.read",
+							"system/ExplanationOfBenefit.read",
+							"system/Goal.read",
+							"system/Immunization.read",
+							"system/Location.read",
+							"system/Medication.read",
+							"system/MedicationDispense.read",
+							"system/MedicationRequest.read",
+							"system/Observation.read",
+							"system/Organization.read",
+							"system/Patient.read",
+							"system/Practitioner.read",
+							"system/PractitionerRole.read",
+							"system/Procedure.read",
+							"system/Provenance.read",
+							"system/RelatedPerson.read"
+						]
+					}
+				},
+				"authenticationFlows": {
+					"SMART App Launch": {
+						"description": "browser based authentication",
+						"providerId": "basic-flow",
+						"builtIn": false,
+						"authenticationExecutions": {
+							"SMART Login": {
+								"requirement": "ALTERNATIVE",
+								"userSetupAllowed": false,
+								"authenticatorFlow": true,
+								"description": "Username, password, otp and other auth forms.",
+								"providerId": "basic-flow",
+								"authenticationExecutions": {
+									"Audience Validation": {
+										"authenticator": "audience-validator",
+										"requirement": "DISABLED",
+										"priority": 10,
+										"authenticatorFlow": false,
+										"configAlias": "localhost",
+										"config": {
+											"audiences": "${FHIR_BASE_URL}"
+										}
+									},
+									"Username Password Form": {
+										"authenticator": "auth-username-password-form",
+										"requirement": "REQUIRED",
+										"priority": 20,
+										"authenticatorFlow": false
+									},
+									"Patient Selection Authenticator": {
+										"authenticator": "auth-select-patient",
+										"requirement": "REQUIRED",
+										"priority": 30,
+										"authenticatorFlow": false,
+										"configAlias": "host.docker",
+										"config": {
+											"internalFhirUrl": "${FHIR_BASE_URL}"
+										}
+									}
+								}
+							}
+						}
+					}
+				},
+				"browserFlow": "SMART App Launch",
+				"groups": {
+					"fhirUser": {
+					}
+				},
+				"defaultGroups": ["fhirUser"],
+				"users": {
+					"fhiruser": {
+						"enabled": true,
+						"password": "change-password",
+						"passwordTemporary": false,
+						"attributes": {
+							"resourceId": ["Patient1"]
+						},
+						"groups": ["fhirUser"]
+					}
+				},
+				"eventsConfig": {
+					"saveLoginEvents": true,
+					"expiration": 23328000,
+					"types": [
+						"FEDERATED_IDENTITY_LINK",
+						"LOGOUT",
+						"LOGIN_ERROR",
+						"IDENTITY_PROVIDER_LINK_ACCOUNT",
+						"REFRESH_TOKEN",
+						"FEDERATED_IDENTITY_LINK_ERROR",
+						"IDENTITY_PROVIDER_POST_LOGIN",
+						"IDENTITY_PROVIDER_LINK_ACCOUNT_ERROR",
+						"CODE_TO_TOKEN_ERROR",
+						"IDENTITY_PROVIDER_FIRST_LOGIN",
+						"REFRESH_TOKEN_ERROR",
+						"IDENTITY_PROVIDER_POST_LOGIN_ERROR",
+						"LOGOUT_ERROR",
+						"CODE_TO_TOKEN",
+						"LOGIN",
+						"IDENTITY_PROVIDER_FIRST_LOGIN_ERROR"
+					],
+					"saveAdminEvents": true
+				}
+			}
+		}
+	}
+}

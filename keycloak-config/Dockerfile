@@ -4,7 +4,7 @@
 # SPDX-License-Identifier: Apache-2.0
 # ----------------------------------------------------------------------------
 
-FROM adoptopenjdk/openjdk11-openj9:ubi
+FROM eclipse-temurin:11
 
 
 RUN groupadd -r keycloak-client -g 1001 && \
