@@ -16,6 +16,7 @@ import jakarta.json.JsonNumber;
 import jakarta.json.JsonObject;
 import jakarta.json.JsonString;
 import jakarta.json.JsonValue;
+import jakarta.json.JsonValue.ValueType;
 
 /**
  * This class represents a collection of properties - a property group. This could be the entire set of properties
@@ -256,7 +257,7 @@ public class PropertyGroup {
     public Object[] getArrayProperty(String propertyName) throws Exception {
         Object[] result = null;
         JsonValue jsonValue = getJsonValue(propertyName);
-        if (jsonValue != null) {
+        if (jsonValue != null && jsonValue.getValueType() != ValueType.NULL) {
             if (jsonValue instanceof JsonArray) {
                 result = convertJsonArray((JsonArray) jsonValue);
             } else {
