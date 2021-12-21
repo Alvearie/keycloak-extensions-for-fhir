@@ -372,11 +372,12 @@ public class KeycloakConfigurator {
 
         Boolean publicClient = clientPg.getBooleanProperty(KeycloakConfig.PROP_CLIENT_PUBLIC_CLIENT, false);
         client.setPublicClient(publicClient);
+
         if (!publicClient) {
             String clientAuthType = clientPg.getStringProperty(KeycloakConfig.PROP_CLIENT_AUTHENTICATOR_TYPE);
             client.setClientAuthenticatorType(clientAuthType);
 
-            if ("client-jwt".equals(clientAuthType)) {
+            if ("client-jwt".equals(clientAuthType) && attributePg != null) {
                 boolean useJwksUrl = Boolean.parseBoolean(attributePg.getStringProperty(KeycloakConfig.PROP_CLIENT_ATTR_USE_JWKS_URL, "false"));
                 if (useJwksUrl) {
                     setAttribute(attributePg, client, KeycloakConfig.PROP_CLIENT_ATTR_USE_JWKS_URL);
