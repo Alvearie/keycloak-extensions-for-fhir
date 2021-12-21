@@ -6,13 +6,13 @@
 
   <groupId>org.alvearie</groupId>
   <artifactId>keycloak-extensions-parent</artifactId>
-  <version>0.3.0-SNAPSHOT</version>
+  <version>0.4.0-SNAPSHOT</version>
   <packaging>pom</packaging>
 
   <properties>
-    <keycloak.version>15.0.2</keycloak.version>
-    <testcontainers-keycloak.version>1.8.0</testcontainers-keycloak.version>
-    <ibm-fhir-server.version>4.9.2</ibm-fhir-server.version>
+    <keycloak.version>16.1.0</keycloak.version>
+    <testcontainers-keycloak.version>1.9.0</testcontainers-keycloak.version>
+    <ibm-fhir-server.version>4.10.2</ibm-fhir-server.version>
     <maven.compiler.target>1.8</maven.compiler.target>
     <maven.compiler.source>1.8</maven.compiler.source>
   </properties>
@@ -129,7 +129,7 @@
       <dependency>
         <groupId>org.seleniumhq.selenium</groupId>
         <artifactId>selenium-java</artifactId>
-        <version>3.141.59</version>
+        <version>4.1.1</version>
         <scope>test</scope>
       </dependency>
       <dependency>

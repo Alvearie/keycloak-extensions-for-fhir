@@ -28,8 +28,8 @@ import org.openqa.selenium.By;
 import org.openqa.selenium.TimeoutException;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebElement;
-import org.openqa.selenium.firefox.FirefoxDriver;
-import org.openqa.selenium.firefox.FirefoxOptions;
+import org.openqa.selenium.chrome.ChromeDriver;
+import org.openqa.selenium.chrome.ChromeOptions;
 import org.openqa.selenium.support.ui.ExpectedConditions;
 import org.openqa.selenium.support.ui.WebDriverWait;
 import org.slf4j.Logger;
@@ -55,18 +55,16 @@ public class SeleniumOauthInteraction {
         oauthAuthUrl = oauth_auth_url;
         oauthTokenUrl = oauth_token_url;
 
-        WebDriverManager.firefoxdriver().setup();
-
-        FirefoxOptions options = new FirefoxOptions();
+        WebDriverManager.chromedriver().setup();
+        ChromeOptions options = new ChromeOptions();
         options.setHeadless(true);
-
-        driver = new FirefoxDriver(options);
+        driver = new ChromeDriver(options);
     }
 
     /**
      * Hits the configured auth url with the configured client_id and redirect_uri, as well as
      * the passed audience and scopes, then tests the login forms with the passed username and password via
-     * the Selenium Firefox WebDriver.
+     * Selenium WebDriver.
      *
      * @param user
      * @param pass
