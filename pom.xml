@@ -61,19 +61,19 @@
         <version>${keycloak.version}</version>
       </dependency>
       <dependency>
-        <groupId>org.glassfish</groupId>
+        <groupId>org.eclipse.parsson</groupId>
         <artifactId>jakarta.json</artifactId>
-        <version>2.0.1</version>
+        <version>1.0.0</version>
       </dependency>
       <dependency>
         <groupId>commons-cli</groupId>
         <artifactId>commons-cli</artifactId>
-        <version>1.4</version>
+        <version>1.5.0</version>
       </dependency>
       <dependency>
         <groupId>commons-io</groupId>
         <artifactId>commons-io</artifactId>
-        <version>2.8.0</version>
+        <version>2.11.0</version>
       </dependency>
       <dependency>
         <groupId>org.apache.commons</groupId>
@@ -91,21 +91,21 @@
         <version>${ibm-fhir-server.version}</version>
       </dependency>
       <dependency>
+        <groupId>junit</groupId>
+        <artifactId>junit</artifactId>
+        <version>4.13.2</version>
+        <scope>test</scope>
+      </dependency>
+      <dependency>
         <groupId>org.mockito</groupId>
         <artifactId>mockito-core</artifactId>
-        <version>3.7.7</version>
+        <version>4.2.0</version>
         <scope>test</scope>
       </dependency>
       <dependency>
         <groupId>org.mockito</groupId>
         <artifactId>mockito-inline</artifactId>
-        <version>3.7.7</version>
-        <scope>test</scope>
-      </dependency>
-      <dependency>
-        <groupId>org.alvearie</groupId>
-        <artifactId>keycloak-config</artifactId>
-        <version>0.0.1-SNAPSHOT</version>
+        <version>4.2.0</version>
         <scope>test</scope>
       </dependency>
       <dependency>
@@ -117,13 +117,13 @@
       <dependency>
         <groupId>io.rest-assured</groupId>
         <artifactId>rest-assured</artifactId>
-        <version>4.1.2</version>
+        <version>4.4.0</version>
         <scope>test</scope>
       </dependency>
       <dependency>
         <groupId>ch.qos.logback</groupId>
         <artifactId>logback-classic</artifactId>
-        <version>1.2.3</version>
+        <version>1.2.9</version>
         <scope>test</scope>
       </dependency>
       <dependency>
@@ -135,13 +135,13 @@
       <dependency>
         <groupId>io.github.bonigarcia</groupId>
         <artifactId>webdrivermanager</artifactId>
-        <version>4.4.3</version>
+        <version>5.0.3</version>
         <scope>test</scope>
       </dependency>
       <dependency>
         <groupId>com.squareup.okhttp3</groupId>
         <artifactId>mockwebserver</artifactId>
-        <version>3.11.0</version>
+        <version>4.9.3</version>
         <scope>test</scope>
       </dependency>
     </dependencies>
