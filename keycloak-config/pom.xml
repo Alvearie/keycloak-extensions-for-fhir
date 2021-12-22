@@ -52,18 +52,61 @@
         </configuration>
       </plugin>
       <plugin>
-        <groupId>org.apache.maven.plugins</groupId>
-        <artifactId>maven-dependency-plugin</artifactId>
-        <version>3.2.0</version>
-        <executions>
-          <execution>
-            <id>copy-dependencies</id>
-            <phase>package</phase>
-            <goals>
-              <goal>copy-dependencies</goal>
-            </goals>
-          </execution>
-        </executions>
+        <!-- The Docker Maven plugin is used to create docker image with the fat jar -->
+        <groupId>io.fabric8</groupId>
+        <artifactId>docker-maven-plugin</artifactId>
+        <version>0.38.1</version>
+        <dependencies>
+          <dependency>
+            <groupId>io.fabric8</groupId>
+            <artifactId>run-java-sh</artifactId>
+            <version>1.3.8</version>
+          </dependency>
+        </dependencies>
+        <configuration>
+          <images>
+            <image>
+              <name>quay.io/alvearie/keycloak-config:${project.version}</name>
+
+              <build>
+                <!-- set workdir to the same directory for simplicity -->
+                <workdir>work</workdir>
+                <from>eclipse-temurin:11</from>
+                <runCmds>
+                  <run>groupadd -r keycloak-client -g 1001</run>
+                  <run>useradd -r -u 1001 -g 1001 -m -d /home/keycloak-client -s /sbin/nologin keycloak-client</run>
+                </runCmds>
+                <assemblies>
+                  <assembly>
+                    <!-- name is used as the default targetDir for files,
+                      so set it to the workdir for simplicity -->
+                    <name>launch</name>
+                    <targetDir>/work</targetDir>
+                    <user>1001</user>
+                    <inline>
+                      <files>
+                        <file>
+                          <source>src/main/resources/config/keycloak-config.json</source>
+                        </file>
+                        <file>
+                          <source>target/docker-extra/run-java/run-java.sh</source>
+                        </file>
+                      </files>
+                    </inline>
+                  </assembly>
+                  <assembly>
+                    <name>app</name>
+                    <targetDir>/work</targetDir>
+                    <descriptorRef>artifact-with-dependencies</descriptorRef>
+                  </assembly>
+                </assemblies>
+                <!-- I wanted run-java to be the entrypoint so we can easily override just the configFile arg
+                  but run-java.sh doesn't seem to work that way -->
+                <cmd>JAVA_MAIN_CLASS=org.alvearie.keycloak.config.Main /work/run-java.sh -configFile keycloak-config.json</cmd>
+              </build>
+            </image>
+          </images>
+        </configuration>
       </plugin>
     </plugins>
   </build>
