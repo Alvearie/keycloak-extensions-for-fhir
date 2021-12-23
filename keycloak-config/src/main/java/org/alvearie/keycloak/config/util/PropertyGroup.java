@@ -257,7 +257,7 @@ public class PropertyGroup {
     public Object[] getArrayProperty(String propertyName) throws Exception {
         Object[] result = null;
         JsonValue jsonValue = getJsonValue(propertyName);
-        if (jsonValue != null && jsonValue.getValueType() != ValueType.NULL) {
+        if (jsonValue != null) {
             if (jsonValue instanceof JsonArray) {
                 result = convertJsonArray((JsonArray) jsonValue);
             } else {
@@ -276,7 +276,10 @@ public class PropertyGroup {
     public List<PropertyEntry> getProperties() throws Exception {
         List<PropertyEntry> results = new ArrayList<>();
         for (Map.Entry<String, JsonValue> entry : jsonObj.entrySet()) {
-            results.add(new PropertyEntry(entry.getKey(), convertJsonValue(entry.getValue())));
+            Object jsonValue = convertJsonValue(entry.getValue());
+            if (jsonValue != null) {
+                results.add(new PropertyEntry(entry.getKey(), jsonValue));
+            }
         }
         return results;
     }
@@ -298,7 +301,7 @@ public class PropertyGroup {
      *
      * @param jsonValue
      *            the JsonValue instance to be converted
-     * @return an instance of Boolean, Integer, String, PropertyGroup, or List<Object>
+     * @return either null or an instance of Boolean, Integer, String, PropertyGroup, or List<Object>
      * @throws Exception
      */
     public static Object convertJsonValue(JsonValue jsonValue) throws Exception {
@@ -328,6 +331,8 @@ public class PropertyGroup {
         case FALSE:
             result = Boolean.FALSE;
             break;
+        case NULL:
+            break;
         default:
             throw new IllegalStateException("Unexpected JSON value type: " + jsonValue.getValueType().name());
         }
@@ -355,6 +360,7 @@ public class PropertyGroup {
      *
      * @param propertyName
      *            the possibly hierarchical property name.
+     * @return the property value as a JsonValue or null if the property is either missing or has a null value
      */
     public JsonValue getJsonValue(String propertyName) {
         String[] pathElements = getPathElements(propertyName);
@@ -363,7 +369,7 @@ public class PropertyGroup {
         if (subGroup != null) {
             result = subGroup.get(pathElements[pathElements.length - 1]);
         }
-        return result;
+        return result == JsonValue.NULL ? null : result;
     }
 
     /**
