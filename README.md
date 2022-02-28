@@ -106,7 +106,7 @@ To build the docker images:
 1. Clone or download the project and navigate to the root of the project.
 2. Build the project via `mvn clean install -DskipTests`.
 3. Build the `alvearie/smart-keycloak` image via `docker build . -t alvearie/smart-keycloak`.
-4. Build the `alvearie/keycloak-config` image via `docker build keycloak-config -t alvearie/keycloak-config`.
+4. Build the `alvearie/keycloak-config` image via `docker build . -f keycloak-config/Dockerfile -t alvearie/keycloak-config`.
 
 ## Contributing
 Are you using Keycloak for SMART on FHIR or other health APIs? If so, we'd love to hear from you.
