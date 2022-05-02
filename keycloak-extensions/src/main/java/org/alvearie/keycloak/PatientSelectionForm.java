@@ -313,6 +313,8 @@ public class PatientSelectionForm implements Authenticator {
 
     @Override
     public void close() {
-        // NOOP
+        if (fhirClient != null) {
+            fhirClient.close();
+        }
     }
 }

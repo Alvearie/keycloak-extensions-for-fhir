@@ -10,9 +10,9 @@
   <packaging>pom</packaging>
 
   <properties>
-    <keycloak.version>16.1.1</keycloak.version>
-    <testcontainers-keycloak.version>1.9.0</testcontainers-keycloak.version>
-    <ibm-fhir-server.version>4.10.2</ibm-fhir-server.version>
+    <keycloak.version>17.0.1</keycloak.version>
+    <testcontainers-keycloak.version>1.10.0</testcontainers-keycloak.version>
+    <ibm-fhir-server.version>4.11.1</ibm-fhir-server.version>
     <maven.compiler.target>1.8</maven.compiler.target>
     <maven.compiler.source>1.8</maven.compiler.source>
   </properties>

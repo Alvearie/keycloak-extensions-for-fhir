@@ -2,10 +2,10 @@
 <module xmlns="urn:jboss:module:1.5" name="com.ibm.fhir">
   <!-- This module file is only used for testing; the real com.ibm.fhir module will come from jboss-fhir-provider -->
   <resources>
-    <resource-root path="fhir-provider-4.10.2.jar"/>
-    <resource-root path="fhir-config-4.10.2.jar"/>
-    <resource-root path="fhir-model-4.10.2.jar"/>
-    <resource-root path="fhir-core-4.10.2.jar"/>
+    <resource-root path="fhir-provider-4.11.1.jar"/>
+    <resource-root path="fhir-config-4.11.1.jar"/>
+    <resource-root path="fhir-model-4.11.1.jar"/>
+    <resource-root path="fhir-core-4.11.1.jar"/>
     <resource-root path="antlr4-runtime-4.9.3.jar"/>
     <resource-root path="commons-io-2.11.0.jar"/>
     <resource-root path="commons-text-1.9.jar"/>
