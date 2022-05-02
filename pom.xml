@@ -6,15 +6,15 @@
 
   <groupId>org.alvearie</groupId>
   <artifactId>keycloak-extensions-parent</artifactId>
-  <version>0.4.0-SNAPSHOT</version>
+  <version>0.5.0-SNAPSHOT</version>
   <packaging>pom</packaging>
 
   <properties>
     <keycloak.version>17.0.1</keycloak.version>
     <testcontainers-keycloak.version>1.10.0</testcontainers-keycloak.version>
     <ibm-fhir-server.version>4.11.1</ibm-fhir-server.version>
-    <maven.compiler.target>1.8</maven.compiler.target>
-    <maven.compiler.source>1.8</maven.compiler.source>
+    <maven.compiler.target>11</maven.compiler.target>
+    <maven.compiler.source>11</maven.compiler.source>
   </properties>
 
   <modules>
