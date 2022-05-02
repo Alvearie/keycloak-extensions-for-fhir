@@ -6,4 +6,4 @@
 ###############################################################################
 
 # Execute the cli jar
-java -cp 'jars/*' org.alvearie.keycloak.config.Main $@
+exec java -cp 'jars/*' org.alvearie.keycloak.config.Main $@
