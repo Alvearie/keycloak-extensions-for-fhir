@@ -177,10 +177,9 @@ public class PatientSelectionForm implements Authenticator {
         authedClientSession.setNote(OIDCLoginProtocol.ISSUER,
                 Urls.realmIssuer(session.getContext().getUri().getBaseUri(), context.getRealm().getName()));
 
-        // Note: this depends on the corresponding string being registered as a valid scope for this client, otherwise it comes back empty
-        Stream<ClientScopeModel> readPatient = TokenManager.getRequestedClientScopes(SMART_SCOPE_PATIENT_READ, client);
-        ClientSessionContext clientSessionCtx = DefaultClientSessionContext.fromClientSessionAndClientScopes(authedClientSession,
-                readPatient, session);
+        // Note: this depends on the corresponding string being registered as a valid scope for this client
+        ClientSessionContext clientSessionCtx = DefaultClientSessionContext.fromClientSessionAndScopeParameter(authedClientSession,
+                SMART_SCOPE_PATIENT_READ, session);
 
         String requestedAudience = authSession.getClientNote(SMART_AUDIENCE_PARAM);
         if (requestedAudience == null) {

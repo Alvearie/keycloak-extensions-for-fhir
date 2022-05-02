@@ -13,7 +13,7 @@ FROM maven:3-jdk-11-slim AS build
 COPY pom.xml ./
 COPY keycloak-config ./keycloak-config
 
-RUN mvn -B package -f keycloak-config -DskipTests
+RUN mvn -B clean package -f keycloak-config -DskipTests
 
 
 # Package stage
