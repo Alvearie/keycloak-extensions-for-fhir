@@ -15,7 +15,7 @@ RUN mvn -B package -DskipTests
 
 
 # Package stage
-FROM quay.io/keycloak/keycloak:16.1.1
+FROM quay.io/keycloak/keycloak:17.0.1
 
 # This can be overridden, but without this I've found the db vendor-detection in Keycloak to be brittle
 ENV DB_VENDOR=H2

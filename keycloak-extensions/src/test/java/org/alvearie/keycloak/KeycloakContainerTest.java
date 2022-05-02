@@ -63,8 +63,7 @@ public class KeycloakContainerTest {
         keycloak.addFileSystemBind("target/dependency", "/opt/jboss/keycloak/modules/system/layers/base/com/ibm/fhir/main", BindMode.READ_ONLY);
         // Shouldn't be needed, but sometimes is: https://github.com/dasniko/testcontainers-keycloak/issues/15
         keycloak.withEnv("DB_VENDOR", "H2");
-        // Temporarily uncomment to keep the container running after the tests complete
-        // or keep it uncommented for reduced cycle time after https://github.com/dasniko/testcontainers-keycloak/issues/33
+        // Uncomment this to keep the container running after the tests complete
 //        keycloak.withReuse(true);
         keycloak.start();
     }
