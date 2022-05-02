@@ -22,6 +22,7 @@ import org.alvearie.keycloak.config.util.PropertyGroup;
 import org.alvearie.keycloak.config.util.PropertyGroup.PropertyEntry;
 import org.keycloak.admin.client.Keycloak;
 import org.keycloak.admin.client.resource.AuthenticationManagementResource;
+import org.keycloak.admin.client.resource.ClientResource;
 import org.keycloak.admin.client.resource.ClientScopesResource;
 import org.keycloak.admin.client.resource.ClientsResource;
 import org.keycloak.admin.client.resource.GroupsResource;
@@ -394,45 +395,52 @@ public class KeycloakConfigurator {
         client.setWebOrigins(clientPg.getStringListProperty(KeycloakConfig.PROP_CLIENT_WEB_ORIGINS));
         clients.get(client.getId()).update(client);
 
-        // Update default assigned client scopes
+        ClientResource cr = clients.get(client.getId());
+
+        // Remove default client scopes that no longer apply and collect the ones to add
+        List<String> defaultClientScopeIdsToAdd = new ArrayList<>();
         List<String> defaultClientScopeNameStrings = clientPg.getStringListProperty(KeycloakConfig.PROP_CLIENT_DEFAULT_CLIENT_SCOPES);
         if (defaultClientScopeNameStrings != null) {
             List<String> defaultClientScopeIds = getClientScopeIds(clientScopes, defaultClientScopeNameStrings);
             if (defaultClientScopeIds != null) {
-                List<ClientScopeRepresentation> existingDefaultClientScopes = clients.get(client.getId()).getDefaultClientScopes();
+                List<ClientScopeRepresentation> existingDefaultClientScopes = cr.getDefaultClientScopes();
                 for (ClientScopeRepresentation existingDefaultClientScope : existingDefaultClientScopes) {
                     if (!defaultClientScopeIds.contains(existingDefaultClientScope.getId())) {
-                        clients.get(client.getId()).removeDefaultClientScope(existingDefaultClientScope.getId());
+                        cr.removeDefaultClientScope(existingDefaultClientScope.getId());
                     }
                     else {
                         defaultClientScopeIds.remove(existingDefaultClientScope.getId());
                     }
                 }
-                for (String defaultClientScopeId : defaultClientScopeIds) {
-                    clients.get(client.getId()).addDefaultClientScope(defaultClientScopeId);
-                }
+                defaultClientScopeIdsToAdd.addAll(defaultClientScopeIds);
             }
         }
 
-        // Update optional assigned client scopes
+        // Remove optional client scopes that no longer apply and collect the ones to add
+        List<String> optionalClientScopeIdsToAdd = new ArrayList<>();
         List<String> optionalClientScopeNameStrings = clientPg.getStringListProperty(KeycloakConfig.PROP_CLIENT_OPTIONAL_CLIENT_SCOPES);
         if (optionalClientScopeNameStrings != null) {
             List<String> optionalClientScopeIds = getClientScopeIds(clientScopes, optionalClientScopeNameStrings);
             if (optionalClientScopeIds != null) {
-                List<ClientScopeRepresentation> existingOptionalClientScopes = clients.get(client.getId()).getOptionalClientScopes();
+                List<ClientScopeRepresentation> existingOptionalClientScopes = cr.getOptionalClientScopes();
                 for (ClientScopeRepresentation existingOptionalClientScope : existingOptionalClientScopes) {
                     if (!optionalClientScopeIds.contains(existingOptionalClientScope.getId())) {
-                        clients.get(client.getId()).removeDefaultClientScope(existingOptionalClientScope.getId());
+                        cr.removeDefaultClientScope(existingOptionalClientScope.getId());
                     }
                     else {
                         optionalClientScopeIds.remove(existingOptionalClientScope.getId());
                     }
                 }
-                for (String defaultClientScopeId : optionalClientScopeIds) {
-                    clients.get(client.getId()).addOptionalClientScope(defaultClientScopeId);
-
-                }
+                optionalClientScopeIdsToAdd.addAll(optionalClientScopeIds);
             }
+        }
+
+        // Note: if a scope already exists in either list on the server, the add call will be ignored
+        for (String clientScopeId : defaultClientScopeIdsToAdd) {
+            cr.addDefaultClientScope(clientScopeId);
+        }
+        for (String clientScopeId : optionalClientScopeIdsToAdd) {
+            cr.addOptionalClientScope(clientScopeId);
         }
     }
 
