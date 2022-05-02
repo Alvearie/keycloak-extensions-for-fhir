@@ -557,9 +557,10 @@
 						}
 					}
 				},
-				"defaultDefaultClientScopes": ["launch/patient"],
+				"defaultDefaultClientScopes": [],
 				"defaultOptionalClientScopes": [
 					"fhirUser",
+					"launch/patient",
 					"offline_access",
 					"online_access",
 					"profile",
