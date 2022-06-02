@@ -12,15 +12,15 @@ Keycloak is configurable and extensible.
 Users can automate the creation of SMART *scopes* by either manually creating them in the admin console, by scripting, or by calling the REST APIs.
 However, supporting SMART *launch context* is a bit more tricky.
 
-In particular, SMART App Launch extends the OAuth 2.0 / OpenID Connect token *response payload* with a set of [launch context parameters](http://www.hl7.org/fhir/smart-app-launch/scopes-and-launch-context/index.html#launch-context-arrives-with-your-access_token). For example, in the case of the `patient` context, a SMART-enabled client application would expect a `patient` parameter in the token response payload (alongside the access token).
+In particular, SMART App Launch extends the OAuth 2.0 / OpenID Connect token *response payload* with a set of [launch context parameters](https://www.hl7.org/fhir/smart-app-launch/scopes-and-launch-context.html#launch-context-arrives-with-your-access_token). For example, in the case of the `patient` context, a SMART-enabled client application would expect a `patient` parameter in the token response payload (alongside the access token).
 
-In addition, SMART App Launch defines a custom `aud` parameter that clients must pass on their [authorization](http://www.hl7.org/fhir/smart-app-launch/#step-1-app-asks-for-authorization) request (in addition to the fields required by OAuth 2.0 / OpenID Connect). Per the SMART "best practices" document at http://docs.smarthealthit.org/authorization/best-practices/#25-access-token-phishing-by-counterfeit-resource-servers, authorization servers should validate this field and use this same value for the `aud` claim in the granted access token.
+In addition, SMART App Launch defines a custom `aud` parameter that clients must pass on their [authorization](http://www.hl7.org/fhir/smart-app-launch/app-launch.html#request-4) request (in addition to the fields required by OAuth 2.0 / OpenID Connect). Per the SMART "best practices" document at http://docs.smarthealthit.org/authorization/best-practices/#25-access-token-phishing-by-counterfeit-resource-servers, authorization servers should validate this field and use this same value for the `aud` claim in the granted access token.
 
 Neither of these OAuth extensions are supported by Keycloak out-of-the-box and so this project can be used to fill these gaps.
 
 ## Standalone app launch with `launch/patient` support
 To launch an application in the context of a single patient, an application should:
-1. Discover the authentication and token endpoints from the FHIR server's `[base]/.well-known/smart-configuration` endpoint as described at http://www.hl7.org/fhir/smart-app-launch/conformance/index.html#using-well-known.
+1. Discover the authentication and token endpoints from the FHIR server's `[base]/.well-known/smart-configuration` endpoint as described at https://www.hl7.org/fhir/smart-app-launch/conformance.html#using-well-known.
 2. Issue a stanard OAuth 2.0 request to the authorization endpoint with the following extensions:
     * an `aud` query parameter that is set to the base of the target FHIR server; and 
     * a set of scopes that includes the `launch/patient` scope
@@ -60,9 +60,9 @@ For `launch/patient` support, the Keycloak extensions for FHIR KeycloakConfigura
 ![A screenshot of the User Session Note mapper for the patient_id note](images/patient-id-token-mapper.png)
 
 ### Using the docker images
-Docker images from this project are published to https://hub.docker.com/u/alvearie:
-* [alvearie/smart-keycloak](https://hub.docker.com/r/alvearie/smart-keycloak) extends the official Keycloak image with the `keycloak-extensions` and their dependencies
-* [alvearie/keycloak-config](https://hub.docker.com/r/alvearie/keycloak-config) packages the `keycloak-config` module on top of `adoptopenjdk/openjdk11-openj9:ubi` (for configuring Keycloak realms)
+Published Docker images from this project:
+* [alvearie/smart-keycloak](https://quay.io/repository/alvearie/smart-keycloak) extends the official Keycloak image with the `keycloak-extensions` and their dependencies
+* [alvearie/keycloak-config](https://quay.io/repository/alvearie/keycloak-config) packages the `keycloak-config` module on top of `adoptopenjdk/openjdk11-openj9:ubi` (for configuring Keycloak realms)
 
 By default, the `alvearie/smart-keycloak` image will behave identical to the Keycloak image from which it extends.
 Here is an example for running the image with a keycloak username and password of admin/admin:
