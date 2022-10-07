@@ -64,17 +64,21 @@ Published Docker images from this project:
 * [alvearie/smart-keycloak](https://quay.io/repository/alvearie/smart-keycloak) extends the official Keycloak image with the `keycloak-extensions` and their dependencies
 * [alvearie/keycloak-config](https://quay.io/repository/alvearie/keycloak-config) packages the `keycloak-config` module on top of `adoptopenjdk/openjdk11-openj9:ubi` (for configuring Keycloak realms)
 
+**Warning** :
+The `alvearie/smart-keycloak` image starts Keycloak in development mode. Non-test deployments will need to use their own Dockerfile which starts the Keycloak in production mode and will require further configuration. See the Keycloak guides for more information. https://www.keycloak.org/guides
+
+
 By default, the `alvearie/smart-keycloak` image will behave identical to the Keycloak image from which it extends.
 Here is an example for running the image with a keycloak username and password of admin/admin:
 
 ```
-docker run -p 8080:8080 -p 8443:8443 -e KEYCLOAK_USER=admin -e KEYCLOAK_PASSWORD=admin alvearie/smart-keycloak
+docker run -p 8080:8080 -p 8443:8443 -e KEYCLOAK_ADMIN=admin -e KEYCLOAK_ADMIN_PASSWORD=admin alvearie/smart-keycloak
 ```
 
 Once you have it running, execute the `alvearie/keycloak-config` image to create or update a Keycloak realm with SMART App Launch support.
 
 By default, `alvearie/keycloak-config` will use the following environment variables to connect to Keycloak and configure the KEYCLOAK_REALM with SMART App Launch support for a FHIR server at FHIR_BASE_URL:
-  * KEYCLOAK_BASE_URL=http://host.docker.internal:8080/auth
+  * KEYCLOAK_BASE_URL=http://host.docker.internal:8080
   * KEYCLOAK_USER=admin
   * KEYCLOAK_PASSWORD=admin
   * KEYCLOAK_REALM=test
@@ -85,7 +89,7 @@ Additionally, the default keycloak-config image will create a single Keycloak us
 It is possible to override these environment variables via the command line (using the `-e` flag), or even to pass an entirely different configuration file by specifying a docker run command. For example, to update a Keycloak server that is listening on port 8081 of the docker host with a custom configuration, you could run a command like the following:
 
 ```
-docker run -v /local/config/dir:/config -e KEYCLOAK_BASE_URL=http://host.docker.internal:8081/auth alvearie/keycloak-config -configFile config/keycloak-config.json
+docker run -v /local/config/dir:/config -e KEYCLOAK_BASE_URL=http://host.docker.internal:8081 alvearie/keycloak-config -configFile config/keycloak-config.json
 ```
 
 See https://github.com/Alvearie/keycloak-extensions-for-fhir/tree/main/keycloak-config/src/main/resources/config for the example configurations that are shipped with this image.

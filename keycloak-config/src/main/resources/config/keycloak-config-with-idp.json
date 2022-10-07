@@ -1,6 +1,6 @@
 {
 	"keycloak": {
-		"serverUrl": "http://keycloak:8080/auth",
+		"serverUrl": "http://keycloak:8080",
 		"adminUser": "${KEYCLOAK_USER}",
 		"adminPassword": "${KEYCLOAK_PASSWORD}",
 		"adminClientId": "admin-cli",
