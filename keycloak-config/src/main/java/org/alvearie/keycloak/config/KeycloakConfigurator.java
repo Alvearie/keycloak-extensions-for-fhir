@@ -609,9 +609,11 @@ public class KeycloakConfigurator {
 				System.err.println("Failed to create flow; status code '" + response.getStatus() + "'");
 				System.err.println(response.readEntity(String.class));
 			}
+		} else {
+			updateFlowWithExecutions(authMgmt, authenticationFlowPg, authenticationFlow);
 		}
 
-		updateFlowWithExecutions(authMgmt, authenticationFlowPg, authenticationFlow);
+
 
 		// Update identity provider redirector
 		for (PropertyEntry authExecutionPe: authenticationFlowPg.getProperties()) {
@@ -629,6 +631,9 @@ public class KeycloakConfigurator {
 		PropertyGroup authenticationExecutionsPg = authenticationFlowPg.getPropertyGroup("authenticationExecutions");
 		JsonObject jsonObject = authenticationFlowPg.getJsonValue("authenticationExecutions").asJsonObject();
 		for (String entry : jsonObject.keySet()) {
+
+			System.out.println("adding auth execution: " + entry);
+
 			PropertyGroup entryProps = authenticationExecutionsPg.getPropertyGroup(entry);
 
 			HashMap<String, String> executionParams = new HashMap<String, String>();
@@ -654,40 +659,75 @@ public class KeycloakConfigurator {
 					// TODO: see if we can get the display name from the authenticator provider_id somehow, instead of requiring it in our config
 					String displayName = childEntry.getName();
 					PropertyGroup childEntryPg = childExecutions.getPropertyGroup(displayName);
-					String authenticator = childEntryPg.getStringProperty("authenticator");
 
-					Boolean childIsFlow = childEntryPg.getBooleanProperty("authenticatorFlow", false);
-					if (childIsFlow) {
-						throw new UnsupportedOperationException("Nest subflows are not yet supported");
-					}
-
-					HashMap<String, String> childExecutionParams = new HashMap<String, String>();
-					childExecutionParams.put("provider", authenticator);
-					AuthenticationExecutionInfoRepresentation childExecution = getOrCreateExecution(authMgmt, entry, displayName, childIsFlow, childExecutionParams);
-
-					String configAlias = childEntryPg.getStringProperty("configAlias");
-					JsonValue configJson = childEntryPg.getJsonValue("config");
-					if (configJson != null) {
-						Map<String, String> config = buildConfigMap(configJson, configAlias);
-
-						AuthenticatorConfigRepresentation authenticatorConfig = getOrCreateAuthenticatorConfig(authMgmt, childExecution, configAlias, config);
-						authenticatorConfig.setConfig(config);
-						authMgmt.updateAuthenticatorConfig(authenticatorConfig.getId(), authenticatorConfig);
-
-						childExecution.setAuthenticationConfig(configAlias);
-					}
-
-					childExecution.setRequirement(childEntryPg.getStringProperty("requirement"));
-					authMgmt.updateExecutions(authenticationFlow.getAlias(), childExecution);
+					configExecution(childEntryPg, authMgmt, entry, displayName, authenticationFlow);
 				}
 			} else {
-				executionParams.put("authenticator", entry);
-				getOrCreateExecution(authMgmt, authenticationFlow.getAlias(), entry, isFlow, executionParams);
+				configExecution(entryProps, authMgmt, authenticationFlow.getAlias(), entry, authenticationFlow);
+			}
+		}
+	}
 
-				// TODO authenticatorConfig
-				executionParams.put("priority", Integer.toString(entryProps.getIntProperty("priority")));
+	private void configExecution(PropertyGroup propGroup, AuthenticationManagementResource authMgmt, String entry,
+			String displayName, AuthenticationFlowRepresentation authenticationFlow) throws Exception {
+		String authenticator = propGroup.getStringProperty("authenticator");
+
+		Boolean childIsFlow = propGroup.getBooleanProperty("authenticatorFlow", false);
+		if (childIsFlow) {
+			System.out.println("Adding nested flow: " + displayName);
+
+			HashMap<String, String> executionParams = new HashMap<>();
+
+			// String alias = propGroup.getStringProperty("alias");
+			String parentFlowAlias = entry;
+			String flowAlias = displayName;
+			String type = propGroup.getStringProperty("providerId");
+			// String provider = propGroup.getStringProperty("provider");
+			String description = propGroup.getStringProperty("description");
+
+			executionParams.put("alias", flowAlias);
+			executionParams.put("type", type);
+			// executionParams.put("provider", "xx");
+			executionParams.put("description", description);
+
+			authMgmt.addExecutionFlow(parentFlowAlias, executionParams);
+
+			// there doesn't seem to be a way to query for this, but the last added item
+			// should be the correct one
+			AuthenticationExecutionInfoRepresentation lastAdded = null;
+			for (AuthenticationExecutionInfoRepresentation flow : authMgmt.getExecutions(parentFlowAlias)) {
+				lastAdded = flow;
 			}
 
+			// have to update the requirement separately, and also the flowAlias doesn't get
+			// set for some reason
+			lastAdded.setAlias(flowAlias);
+			lastAdded.setRequirement(propGroup.getStringProperty("requirement"));
+			authMgmt.updateExecutions(parentFlowAlias, lastAdded);
+
+			// now fetch the nested flow so we can recursively add the executions to it
+			authenticationFlow = authMgmt.getFlow(lastAdded.getFlowId());
+			updateFlowWithExecutions(authMgmt, propGroup, authenticationFlow);
+		} else {
+			HashMap<String, String> childExecutionParams = new HashMap<>();
+			childExecutionParams.put("provider", authenticator);
+			AuthenticationExecutionInfoRepresentation childExecution = getOrCreateExecution(authMgmt, entry, displayName,
+					childIsFlow, childExecutionParams);
+
+			String configAlias = propGroup.getStringProperty("configAlias");
+			JsonValue configJson = propGroup.getJsonValue("config");
+			if (configJson != null) {
+				Map<String, String> config = buildConfigMap(configJson, configAlias);
+
+				AuthenticatorConfigRepresentation authenticatorConfig = getOrCreateAuthenticatorConfig(authMgmt,
+						childExecution, configAlias, config);
+				authenticatorConfig.setConfig(config);
+				authMgmt.updateAuthenticatorConfig(authenticatorConfig.getId(), authenticatorConfig);
+				childExecution.setAuthenticationConfig(configAlias);
+			}
+
+			childExecution.setRequirement(propGroup.getStringProperty("requirement"));
+			authMgmt.updateExecutions(authenticationFlow.getAlias(), childExecution);
 		}
 	}
 
@@ -735,13 +775,22 @@ public class KeycloakConfigurator {
 	private AuthenticationExecutionInfoRepresentation getOrCreateExecution(AuthenticationManagementResource authMgmt,
 			String flowAlias, String displayName, boolean isFlow, HashMap<String, String> executionParams) {
 		AuthenticationExecutionInfoRepresentation savedExecution = getExecutionByDisplayName(authMgmt, flowAlias, displayName);
+
+		// System.out.println("savedExecution1: " + savedExecution);
+
 		if (savedExecution == null) {
 			if (isFlow) {
 				authMgmt.addExecutionFlow(flowAlias, executionParams);
 			} else {
+				// System.out.println("calling addExecution for flowAlias: " + flowAlias);
+				// for (Map.Entry<String, String> entry : executionParams.entrySet()) {
+				// System.out.println("addExecution param: " + entry.getKey() + " : " +
+				// entry.getValue());
+				// }
 				authMgmt.addExecution(flowAlias, executionParams);
 			}
 			savedExecution = getExecutionByDisplayName(authMgmt, flowAlias, displayName);
+			// System.out.println("savedExecution2: " + savedExecution);
 		}
 		if (savedExecution == null) {
 			throw new RuntimeException("Unable to create execution '" + displayName + "'");
