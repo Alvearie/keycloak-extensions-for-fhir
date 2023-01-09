@@ -1,6 +1,6 @@
 {
 	"keycloak": {
-		"serverUrl": "http://localhost:55095/auth",
+		"serverUrl": "http://localhost:55095",
 		"adminUser": "admin",
 		"adminPassword": "admin",
 		"adminClientId": "admin-cli",

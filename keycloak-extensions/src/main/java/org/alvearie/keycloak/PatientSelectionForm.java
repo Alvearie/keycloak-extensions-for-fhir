@@ -2,26 +2,32 @@
 (C) Copyright IBM Corp. 2021
 
 SPDX-License-Identifier: Apache-2.0
-*/
+ */
 package org.alvearie.keycloak;
 
+import java.time.LocalDate;
+import java.time.ZoneId;
+import java.time.format.DateTimeFormatter;
+import java.time.format.FormatStyle;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import java.util.Objects;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import javax.ws.rs.RuntimeType;
-import javax.ws.rs.client.Client;
-import javax.ws.rs.client.Entity;
-import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.core.Response;
 
 import org.alvearie.keycloak.freemarker.PatientStruct;
+import org.hl7.fhir.r4.model.Bundle;
+import org.hl7.fhir.r4.model.Bundle.BundleEntryComponent;
+import org.hl7.fhir.r4.model.Bundle.BundleEntryRequestComponent;
+import org.hl7.fhir.r4.model.Bundle.BundleType;
+import org.hl7.fhir.r4.model.Bundle.HTTPVerb;
+import org.hl7.fhir.r4.model.HumanName;
+import org.hl7.fhir.r4.model.Patient;
+import org.hl7.fhir.r4.model.Resource;
 import org.jboss.logging.Logger;
-import org.jboss.resteasy.client.jaxrs.ResteasyClientBuilder;
 import org.jboss.resteasy.util.HttpHeaderNames;
 import org.keycloak.authentication.AuthenticationFlowContext;
 import org.keycloak.authentication.AuthenticationFlowError;
@@ -43,17 +49,9 @@ import org.keycloak.services.Urls;
 import org.keycloak.services.util.DefaultClientSessionContext;
 import org.keycloak.sessions.AuthenticationSessionModel;
 
-import com.ibm.fhir.core.FHIRMediaType;
-import com.ibm.fhir.model.config.FHIRModelConfig;
-import com.ibm.fhir.model.resource.Bundle;
-import com.ibm.fhir.model.resource.Bundle.Entry;
-import com.ibm.fhir.model.resource.Patient;
-import com.ibm.fhir.model.type.Date;
-import com.ibm.fhir.model.type.HumanName;
-import com.ibm.fhir.model.type.Url;
-import com.ibm.fhir.model.type.code.BundleType;
-import com.ibm.fhir.model.type.code.HTTPVerb;
-import com.ibm.fhir.provider.FHIRProvider;
+import ca.uhn.fhir.context.FhirContext;
+import ca.uhn.fhir.rest.client.api.IGenericClient;
+import ca.uhn.fhir.rest.client.api.ServerValidationModeEnum;
 
 /**
  * Present a patient context picker when the client requests the launch/patient scope and the
@@ -62,258 +60,267 @@ import com.ibm.fhir.provider.FHIRProvider;
  */
 public class PatientSelectionForm implements Authenticator {
 
-    private static final Logger LOG = Logger.getLogger(PatientSelectionForm.class);
+	private static final Logger LOG = Logger.getLogger(PatientSelectionForm.class);
 
-    private static final String SMART_AUDIENCE_PARAM = "client_request_param_aud";
-    private static final String SMART_SCOPE_PATIENT_READ = "patient/Patient.read";
-    private static final String SMART_SCOPE_LAUNCH_PATIENT = "launch/patient";
+	private static final String SMART_AUDIENCE_PARAM = "client_request_param_aud";
 
-    private static final String ATTRIBUTE_RESOURCE_ID = "resourceId";
+	private static final String SMART_SCOPE_PATIENT_READ = "patient/Patient.read";
+	private static final String SMART_SCOPE_LAUNCH_PATIENT = "launch/patient";
 
-    private Client fhirClient;
+	private static final String ATTRIBUTE_RESOURCE_ID = "resourceId";
 
-    public PatientSelectionForm() {
-        FHIRModelConfig.setExtendedCodeableConceptValidation(false);
-        fhirClient = ResteasyClientBuilder.newClient()
-                .register(new FHIRProvider(RuntimeType.CLIENT));
-    }
 
-    @Override
-    public void authenticate(AuthenticationFlowContext context) {
-        AuthenticationSessionModel authSession = context.getAuthenticationSession();
-        ClientModel client = authSession.getClient();
+	// creating the fhirContext is expensive, you only want to create it once
+	private static final FhirContext fhirCtx = FhirContext.forR4();
+	static {
+		// turn off server validation (capability statement pre-checks)
+		fhirCtx.getRestfulClientFactory().setServerValidationMode(ServerValidationModeEnum.NEVER);
+	}
 
-        String requestedScopesString = authSession.getClientNote(OIDCLoginProtocol.SCOPE_PARAM);
-        Stream<ClientScopeModel> clientScopes = TokenManager.getRequestedClientScopes(requestedScopesString, client);
+	public PatientSelectionForm() {
 
-        if (clientScopes.noneMatch(s -> SMART_SCOPE_LAUNCH_PATIENT.equals(s.getName()))) {
-            // no launch/patient scope == no-op
-            context.success();
-            return;
-        }
+	}
 
-        if (context.getUser() == null) {
-            fail(context, "Expected a user but found null");
-            return;
-        }
+	@Override
+	public void authenticate(AuthenticationFlowContext context) {
+		AuthenticationSessionModel authSession = context.getAuthenticationSession();
+		ClientModel client = authSession.getClient();
 
-        List<String> resourceIds = getResourceIdsForUser(context);
-        if (resourceIds.size() == 0) {
-            fail(context, "Expected user to have one or more resourceId attributes, but found none");
-            return;
-        }
-        if (resourceIds.size() == 1) {
-            succeed(context, resourceIds.get(0));
-            return;
-        }
+		String requestedScopesString = authSession.getClientNote(OIDCLoginProtocol.SCOPE_PARAM);
+		Stream<ClientScopeModel> clientScopes = TokenManager.getRequestedClientScopes(requestedScopesString, client);
 
-        AuthenticatorConfigModel config = context.getAuthenticatorConfig();
-        if (config == null || !config.getConfig().containsKey(PatientSelectionFormFactory.INTERNAL_FHIR_URL_PROP_NAME)) {
-            fail(context, "The Patient Selection Authenticator must be configured with a valid FHIR base URL");
-            return;
-        }
+		if (clientScopes.noneMatch(s -> SMART_SCOPE_LAUNCH_PATIENT.equals(s.getName()))) {
+			// no launch/patient scope == no-op
+			context.success();
+			return;
+		}
 
-        String accessToken = buildInternalAccessToken(context, resourceIds);
+		if (context.getUser() == null) {
+			fail(context, "Expected a user but found null");
+			return;
+		}
 
-        Bundle requestBundle = buildRequestBundle(resourceIds);
-        try (Response fhirResponse = fhirClient
-                .target(config.getConfig().get(PatientSelectionFormFactory.INTERNAL_FHIR_URL_PROP_NAME))
-                .request(MediaType.APPLICATION_JSON)
-                .header(HttpHeaderNames.AUTHORIZATION, "Bearer " + accessToken)
-                .post(Entity.entity(requestBundle, FHIRMediaType.APPLICATION_FHIR_JSON_TYPE))) {
+		List<String> resourceIds = getResourceIdsForUser(context);
+		if (resourceIds.size() == 0) {
+			fail(context, "Expected user to have one or more resourceId attributes, but found none");
+			return;
+		}
+		if (resourceIds.size() == 1) {
+			succeed(context, resourceIds.get(0));
+			return;
+		}
 
-            if (fhirResponse.getStatus() != 200) {
-                String msg = "Error while retrieving Patient resources for the selection form";
-                LOG.warnf(msg);
-                LOG.warnf("Response with code " + fhirResponse.getStatus() + "%n%s", fhirResponse.readEntity(String.class));
-                context.failure(AuthenticationFlowError.INTERNAL_ERROR,
-                        Response.status(302)
-                        .header("Location", context.getAuthenticationSession().getRedirectUri() +
-                                "?error=server_error" +
-                                "&error_description=" + msg)
-                        .build());
-                return;
-            }
+		AuthenticatorConfigModel config = context.getAuthenticatorConfig();
+		if (config == null || !config.getConfig().containsKey(PatientSelectionFormFactory.INTERNAL_FHIR_URL_PROP_NAME)) {
+			fail(context, "The Patient Selection Authenticator must be configured with a valid FHIR base URL");
+			return;
+		}
 
-            List<PatientStruct> patients = gatherPatientInfo(fhirResponse.readEntity(Bundle.class));
-            if (patients.isEmpty()) {
-                succeed(context, resourceIds.get(0));
-                return;
-            }
+		String accessToken = buildInternalAccessToken(context, resourceIds);
 
-            if (patients.size() == 1) {
-                succeed(context, patients.get(0).getId());
-            } else {
-                Response response = context.form()
-                        .setAttribute("patients", patients)
-                        .createForm("patient-select-form.ftl");
+		Bundle requestBundle = buildRequestBundle(resourceIds);
 
-                context.challenge(response);
-            }
-        }
-    }
+		String fhirBaseUrl = config.getConfig().get(PatientSelectionFormFactory.INTERNAL_FHIR_URL_PROP_NAME);
+		IGenericClient hapiClient = fhirCtx.newRestfulGenericClient(fhirBaseUrl);
 
-    private List<String> getResourceIdsForUser(AuthenticationFlowContext context) {
-        return context.getUser().getAttributeStream(ATTRIBUTE_RESOURCE_ID)
-                .flatMap(a -> Arrays.stream(a.split(" ")))
-                .map(String::trim)
-                .filter(s -> !s.isEmpty())
-                .collect(Collectors.toList());
-    }
+		try {
+			Bundle returnBundle = hapiClient.transaction().withBundle(requestBundle)
+					.withAdditionalHeader(HttpHeaderNames.AUTHORIZATION, "Bearer " + accessToken)
+					.execute();
 
-    private String buildInternalAccessToken(AuthenticationFlowContext context, List<String> resourceIds) {
-        KeycloakSession session = context.getSession();
-        AuthenticationSessionModel authSession = context.getAuthenticationSession();
-        UserModel user = context.getUser();
-        ClientModel client = authSession.getClient();
+			List<PatientStruct> patients = gatherPatientInfo(returnBundle);
+			if (patients.isEmpty()) {
+				succeed(context, resourceIds.get(0));
+				return;
+			}
 
-        UserSessionModel userSession = session.sessions().createUserSession(context.getRealm(), user, user.getUsername(),
-                context.getConnection().getRemoteAddr(), null, false, null, null);
+			if (patients.size() == 1) {
+				succeed(context, patients.get(0).getId());
+			} else {
+				Response response = context.form()
+						.setAttribute("patients", patients)
+						.createForm("patient-select-form.ftl");
 
-        AuthenticatedClientSessionModel authedClientSession = userSession.getAuthenticatedClientSessionByClient(client.getId());
-        if (authedClientSession == null) {
-            authedClientSession = session.sessions().createClientSession(context.getRealm(), client, userSession);
-        }
-        authedClientSession.setNote(OIDCLoginProtocol.ISSUER,
-                Urls.realmIssuer(session.getContext().getUri().getBaseUri(), context.getRealm().getName()));
+				context.challenge(response);
+			}
+		} catch (Exception ex) {
+			String msg = "Error while retrieving Patient resources for the selection form";
+			LOG.warn(msg);
+			LOG.warn("Exception caught: " + ex);
+			context.failure(AuthenticationFlowError.INTERNAL_ERROR,
+					Response.status(302).header("Location", context.getAuthenticationSession().getRedirectUri()
+							+ "?error=server_error" + "&error_description=" + msg).build());
+			return;
+		}
+	}
 
-        // Note: this depends on the corresponding string being registered as a valid scope for this client
-        ClientSessionContext clientSessionCtx = DefaultClientSessionContext.fromClientSessionAndScopeParameter(authedClientSession,
-                SMART_SCOPE_PATIENT_READ, session);
+	private List<String> getResourceIdsForUser(AuthenticationFlowContext context) {
+		return context.getUser().getAttributeStream(ATTRIBUTE_RESOURCE_ID)
+				.flatMap(a -> Arrays.stream(a.split(" ")))
+				.map(String::trim)
+				.filter(s -> !s.isEmpty())
+				.collect(Collectors.toList());
+	}
 
-        String requestedAudience = authSession.getClientNote(SMART_AUDIENCE_PARAM);
-        if (requestedAudience == null) {
-            String internalFhirUrl = context.getAuthenticatorConfig().getConfig().get(PatientSelectionFormFactory.INTERNAL_FHIR_URL_PROP_NAME);
-            LOG.info("Client request is missing the 'aud' parameter, using '" + internalFhirUrl + "' from config.");
-            requestedAudience = internalFhirUrl;
-        }
+	private String buildInternalAccessToken(AuthenticationFlowContext context, List<String> resourceIds) {
+		KeycloakSession session = context.getSession();
+		AuthenticationSessionModel authSession = context.getAuthenticationSession();
+		UserModel user = context.getUser();
+		ClientModel client = authSession.getClient();
 
-        // Explicit decision not to check the requested audience against the configured internal FHIR URL
-        // Checking of the requested audience should be performed in a previous step by the AudienceValidator
-        TokenManager tokenManager = new TokenManager();
-        AccessToken accessToken = tokenManager.createClientAccessToken(session, context.getRealm(), authSession.getClient(),
-                context.getUser(), userSession, clientSessionCtx);
+		UserSessionModel userSession = session.sessions().createUserSession(context.getRealm(), user, user.getUsername(),
+				context.getConnection().getRemoteAddr(), null, false, null, null);
 
-        // Explicitly override the scope string with what we need (less brittle than depending on this to exist as a client scope)
-        accessToken.setScope(SMART_SCOPE_PATIENT_READ);
+		AuthenticatedClientSessionModel authedClientSession = userSession.getAuthenticatedClientSessionByClient(client.getId());
+		if (authedClientSession == null) {
+			authedClientSession = session.sessions().createClientSession(context.getRealm(), client, userSession);
+		}
+		authedClientSession.setNote(OIDCLoginProtocol.ISSUER,
+				Urls.realmIssuer(session.getContext().getUri().getBaseUri(), context.getRealm().getName()));
 
-        JsonWebToken jwt = accessToken.audience(requestedAudience);
-        jwt.setOtherClaims("patient_id", resourceIds);
-        return session.tokens().encode(jwt);
-    }
+		// Note: this depends on the corresponding string being registered as a valid scope for this client
+		ClientSessionContext clientSessionCtx = DefaultClientSessionContext.fromClientSessionAndScopeParameter(authedClientSession,
+				SMART_SCOPE_PATIENT_READ, session);
 
-    private Bundle buildRequestBundle(List<String> resourceIds) {
-        Bundle.Builder requestBuilder = Bundle.builder()
-                .type(BundleType.BATCH);
-        resourceIds.stream()
-                .map(id -> Entry.Request.builder()
-                        .method(HTTPVerb.GET)
-                        .url(Url.of("Patient/" + id))
-                        .build())
-                .map(request -> Entry.builder()
-                        .request(request)
-                        .build())
-                .forEach(entry -> requestBuilder.entry(entry));
-        return requestBuilder.build();
-    }
+		String requestedAudience = authSession.getClientNote(SMART_AUDIENCE_PARAM);
+		if (requestedAudience == null) {
+			String internalFhirUrl = context.getAuthenticatorConfig().getConfig().get(PatientSelectionFormFactory.INTERNAL_FHIR_URL_PROP_NAME);
+			LOG.info("Client request is missing the 'aud' parameter, using '" + internalFhirUrl + "' from config.");
+			requestedAudience = internalFhirUrl;
+		}
 
-    private void fail(AuthenticationFlowContext context, String msg) {
-        LOG.warn(msg);
-        context.failure(AuthenticationFlowError.INTERNAL_ERROR,
-                Response.status(302)
-                .header("Location", context.getAuthenticationSession().getRedirectUri() +
-                        "?error=server_error" +
-                        "&error_description=" + msg)
-                .build());
-    }
+		// Explicit decision not to check the requested audience against the configured internal FHIR URL
+		// Checking of the requested audience should be performed in a previous step by the AudienceValidator
+		TokenManager tokenManager = new TokenManager();
+		AccessToken accessToken = tokenManager.createClientAccessToken(session, context.getRealm(), authSession.getClient(),
+				context.getUser(), userSession, clientSessionCtx);
 
-    private void succeed(AuthenticationFlowContext context, String patient) {
-        // Add selected information to authentication session
-        context.getAuthenticationSession().setUserSessionNote("patient_id", patient);
-        context.success();
-    }
+		// Explicitly override the scope string with what we need (less brittle than depending on this to exist as a client scope)
+		accessToken.setScope(SMART_SCOPE_PATIENT_READ);
 
-    private List<PatientStruct> gatherPatientInfo(Bundle fhirResponse) {
-        List<PatientStruct> patients = new ArrayList<>();
+		JsonWebToken jwt = accessToken.audience(requestedAudience);
+		jwt.setOtherClaims("patient_id", resourceIds);
+		return session.tokens().encode(jwt);
+	}
 
-        for (Entry entry : fhirResponse.getEntry()) {
-            if (entry.getResponse() == null || !entry.getResponse().getStatus().hasValue() ||
-                    !entry.getResponse().getStatus().getValue().startsWith("200")) {
-                continue;
-            }
+	private Bundle buildRequestBundle(List<String> resourceIds) {
 
-            Patient patient = entry.getResource().as(Patient.class);
+		Bundle searchBundle = new Bundle();
+		searchBundle.setType(BundleType.BATCH);
 
-            String patientId = patient.getId();
+		for (String id : resourceIds) {
+			BundleEntryComponent bec = searchBundle.addEntry();
+			BundleEntryRequestComponent request = new BundleEntryRequestComponent();
+			request.setMethod(HTTPVerb.GET);
+			request.setUrl("Patient/" + id);
+			bec.setRequest(request);
+		}
+		return searchBundle;
+	}
 
-            String patientName = "Missing Name";
-            if (patient.getName().isEmpty()) {
-                LOG.warn("Patient[id=" + patient.getId() + "] has no name; using placeholder");
-            } else {
-                if (patient.getName().size() > 1) {
-                    LOG.warn("Patient[id=" + patient.getId() + "] has multiple names; using the first one");
-                }
-                patientName = constructSimpleName(patient.getName().get(0));
-            }
+	private void fail(AuthenticationFlowContext context, String msg) {
+		LOG.warn(msg);
+		context.failure(AuthenticationFlowError.INTERNAL_ERROR,
+				Response.status(302)
+				.header("Location", context.getAuthenticationSession().getRedirectUri() +
+						"?error=server_error" +
+						"&error_description=" + msg)
+				.build());
+	}
 
-            String patientDOB = patient.getBirthDate() == null ? "missing"
-                    : Date.PARSER_FORMATTER.format(patient.getBirthDate().getValue());
+	private void succeed(AuthenticationFlowContext context, String patient) {
+		// Add selected information to authentication session
+		context.getAuthenticationSession().setUserSessionNote("patient_id", patient);
+		context.success();
+	}
 
-            patients.add(new PatientStruct(patientId, patientName, patientDOB));
-        }
+	private List<PatientStruct> gatherPatientInfo(Bundle fhirResponse) {
+		List<PatientStruct> patients = new ArrayList<>();
 
-        return patients;
-    }
+		for (BundleEntryComponent entry : fhirResponse.getEntry()) {
+			String status = entry.getResponse() == null ? null : entry.getResponse().getStatus();
+			if (status == null || status.isBlank() || !status.startsWith("200")) {
+				continue;
+			}
 
-    private String constructSimpleName(HumanName name) {
-        if (name.getText() != null && name.getText().hasValue()) {
-            return name.getText().getValue();
-        }
+			Resource resource = entry.getResource();
+			if (!(resource instanceof Patient)) {
+				continue;
+			}
 
-        return Stream.concat(name.getGiven().stream(), Stream.of(name.getFamily()))
-                .map(n -> n.getValue())
-                .filter(Objects::nonNull)
-                .collect(Collectors.joining(" "));
-    }
+			Patient patient = (Patient) resource;
+			String patientId = patient.getIdElement().getIdPart();
 
-    @Override
-    public boolean requiresUser() {
-        return true;
-    }
+			String patientName = "Missing Name";
+			if (patient.getName().isEmpty()) {
+				LOG.warn("Patient[id=" + patient.getId() + "] has no name; using placeholder");
+			} else {
+				if (patient.getName().size() > 1) {
+					LOG.warn("Patient[id=" + patient.getId() + "] has multiple names; using the first one");
+				}
+				patientName = constructSimpleName(patient.getName().get(0));
+			}
 
-    @Override
-    public boolean configuredFor(KeycloakSession session, RealmModel realm, UserModel user) {
-        return true;
-    }
+			String patientDOB = "missing";
+			if (patient.getBirthDate() != null) {
+				LocalDate ld = patient.getBirthDate().toInstant().atZone(ZoneId.systemDefault()).toLocalDate();
+				patientDOB = ld.format(DateTimeFormatter.ofLocalizedDate(FormatStyle.MEDIUM));
+			}
 
-    @Override
-    public void setRequiredActions(KeycloakSession session, RealmModel realm, UserModel user) {
-    }
+			LOG.debugf("Adding patient to return struct %s, %s", patientId, patientName);
+			patients.add(new PatientStruct(patientId, patientName, patientDOB));
+		}
 
-    @Override
-    public void action(AuthenticationFlowContext context) {
+		return patients;
+	}
 
-        MultivaluedMap<String, String> formData = context.getHttpRequest().getDecodedFormParameters();
-        String patient = formData.getFirst("patient");
+	private String constructSimpleName(HumanName name) {
+		if (name == null) {
+			return null;
+		}
+		String firstNames = name.getGivenAsSingleString();
+		String lastName = name.getFamily();
+		firstNames = firstNames == null ? "" : firstNames;
+		lastName = lastName == null ? "" : lastName;
+		return (firstNames + lastName).trim();
+	}
 
-        LOG.debugf("The user selected patient '%s'", patient);
+	@Override
+	public boolean requiresUser() {
+		return true;
+	}
 
-        if (patient == null || patient.trim().isEmpty() || !getResourceIdsForUser(context).contains(patient.trim())) {
-            LOG.warnf("The patient selection '%s' is not valid for the authenticated user.", patient.trim());
-            context.cancelLogin();
+	@Override
+	public boolean configuredFor(KeycloakSession session, RealmModel realm, UserModel user) {
+		return true;
+	}
 
-            // reauthenticate...
-            authenticate(context);
-            return;
-        }
+	@Override
+	public void setRequiredActions(KeycloakSession session, RealmModel realm, UserModel user) {
+	}
 
-        succeed(context, patient.trim());
-    }
+	@Override
+	public void action(AuthenticationFlowContext context) {
 
-    @Override
-    public void close() {
-        if (fhirClient != null) {
-            fhirClient.close();
-        }
-    }
+		MultivaluedMap<String, String> formData = context.getHttpRequest().getDecodedFormParameters();
+		String patient = formData.getFirst("patient");
+
+		LOG.debugf("The user selected patient '%s'", patient);
+
+		if (patient == null || patient.trim().isEmpty() || !getResourceIdsForUser(context).contains(patient.trim())) {
+			LOG.warnf("The patient selection '%s' is not valid for the authenticated user.", patient);
+			context.cancelLogin();
+
+			// reauthenticate...
+			authenticate(context);
+			return;
+		}
+
+		succeed(context, patient.trim());
+	}
+
+	@Override
+	public void close() {
+		// nothing to do
+	}
 }

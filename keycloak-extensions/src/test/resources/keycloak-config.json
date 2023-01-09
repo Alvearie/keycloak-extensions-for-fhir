@@ -64,7 +64,7 @@
 				"builtIn": false,
 				"authenticationExecutions": {
 					"SMART Login": {
-						"requirement": "ALTERNATIVE",
+						"requirement": "REQUIRED",
 						"userSetupAllowed": false,
 						"authenticatorFlow": true,
 						"description": "Username, password, otp and other auth forms.",
@@ -80,24 +80,34 @@
 									"audiences": "https://localhost:9443/fhir-server/api/v4##http://host.testcontainers.internal:9080/fhir-server/api/v4"
 								}
 							},
-							"Username Password Form": {
-								"authenticator": "auth-username-password-form", 
-								"requirement": "REQUIRED",
-								"priority": 20,
-								"authenticatorFlow": false
-							},
-							"Patient Selection Authenticator": {
-								"authenticator": "auth-select-patient",
-								"requirement": "REQUIRED",
-								"priority": 30,
-								"authenticatorFlow": false,
-								"configAlias": "host.docker",
-								"config": {
-									"internalFhirUrl": "http://host.testcontainers.internal:${FHIR_PORT}/fhir-server/api/v4"
-								}
-							}
+							"Forms" : {
+                                "description": "Forms",
+                                "priority": 20,
+                                "providerId": "basic-flow",
+                                "builtIn": false,
+                                "requirement": "REQUIRED",
+                                "authenticatorFlow": true,
+                                "authenticationExecutions": {
+        							"Username Password Form": {
+        								"authenticator": "auth-username-password-form", 
+        								"requirement": "REQUIRED",
+        								"priority": 20,
+        								"authenticatorFlow": false
+        							}
+    							}
+							}				
 						}
-					}
+					},
+					"Patient Selection Authenticator": {
+                                "authenticator": "auth-select-patient",
+                                "requirement": "REQUIRED",
+                                "priority": 30,
+                                "authenticatorFlow": false,
+                                "configAlias": "host.docker",
+                                "config": {
+                                    "internalFhirUrl": "http://host.testcontainers.internal:${FHIR_PORT}/fhir-server/api/v4"
+                                }
+                    }
 				}
 			}
 		},
